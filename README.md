@@ -15,3 +15,4 @@ Oh yeah, one last thing, no tests. I haven't written a line of code for several 
 
 I spent a lot of hours trying to figure out how to connect to JIRA REST API for JIRA CLOUD and be able to use Linq expressions. The meat of that is below, hope it's helpful.
 
+![img](https://github.com/lopperman/JiraConsole/blob/master/JiraConsole_Brower/misc/JiraConsole1.png)
