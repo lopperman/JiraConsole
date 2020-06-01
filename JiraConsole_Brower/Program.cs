@@ -43,27 +43,24 @@ namespace JiraConsole_Brower
                 var settings = new JiraRestClientSettings();
                 settings.EnableUserPrivacyMode = true;
 
-
                 IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", jiraProjectKey));
-                options.MaxIssuesPerRequest = 500;
+                options.MaxIssuesPerRequest = 500; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
                 options.FetchBasicFields = true;
 
                 Console.WriteLine("connecting to {0}@{1} ...", jiraUserName, jiraBaseUrl);
 
                 var jira = Jira.CreateRestClient(jiraBaseUrl, jiraUserName, jiraAPIToken, settings);
 
-
                 var issues = jira.Issues.GetIssuesFromJqlAsync(options).Result;
-
-                var proj = jira.Projects.GetProjectAsync(jiraProjectKey).Result;
 
                 int takeCount = 50;
                 int startAt = 0;
                 int currentCount = 0;
 
+                //basically just paging through the project. If you know what the max issues are for your Jira instance, change the 'takeCount' about to match.
                 while (true)
                 {
-                    var changed = jira.Issues.Queryable.Where(x => x.Project == "POS" && x.Type == "Story" && x.Status != "Archive" && x.Status != "Archived");
+                    var changed = jira.Issues.Queryable.Where(x => x.Project == jiraProjectKey && x.Type == "Story" && x.Status != "Archive" && x.Status != "Archived");
                     var changedList = changed.Skip(startAt).Take(takeCount).ToList();
 
                     if (changedList.Count == 0) break;
@@ -74,11 +71,9 @@ namespace JiraConsole_Brower
 
                     foreach (var issue in changedList)
                     {
-
                         JiraCard jiraCard = new JiraCard(issue.JiraIdentifier, issue.Key.Value, issue.Status.Name, "", issue.Created.Value, issue.Updated.Value);
 
                         var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
-
 
                         for (int i = 0; i < changeLogs.Count; i++)
                         {
@@ -88,7 +83,6 @@ namespace JiraConsole_Brower
                             {
                                 jiraCard.AddChangeLog(changeLog.Id, changeLog.CreatedDate, cli.FieldName, cli.FieldType, cli.FromId, cli.FromValue, cli.ToId, cli.ToValue);
                             }
-
                         }
 
                         jiraCards.Add(jiraCard);
@@ -102,7 +96,6 @@ namespace JiraConsole_Brower
                 Console.WriteLine("");
                 Console.Beep();
                 Console.WriteLine("writing {0} cards with a total of {1} change log events to {2} ...", jiraCards.Count, jiraCards.Sum(x => x.ChangeLogs.Count), filePath_JiraExpandedIssuesCSV);
-
 
                 WriteCSVFile(jiraCards, filePath_JiraExpandedIssuesCSV);
 
@@ -125,6 +118,12 @@ namespace JiraConsole_Brower
             }
         }
 
+        /// <summary>
+        /// Build CSV file.
+        /// Importing into MS Excel (delimited by ",") works nicely, but I'm also planning on adding a JSON option. 
+        /// </summary>
+        /// <param name="cards"></param>
+        /// <param name="filePath"></param>
         public static void WriteCSVFile(List<JiraCard> cards, string filePath)
         {
             if (File.Exists(filePath))
@@ -150,6 +149,12 @@ namespace JiraConsole_Brower
             writer.Close();
         }
 
+        /// <summary>
+        /// Clean out the mess that Jira includes in their description and comments fields. Was having some issues with that, so description and comments currently
+        /// aren't written to the text file. I consider that a nice to have, but I'll work on it soon.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public static string CleanText(string text)
         {
             string ret = string.Empty;
