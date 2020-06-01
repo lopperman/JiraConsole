@@ -12,3 +12,6 @@ PC Syntax:  JiraConsole_Brower.exe "[Jira Email]" "[Jira API Token]" "https://[B
 There are a couple of minor magic strings that you might want to change. I'll make those all configurable soon, as I think this app will be helpful for other project at work, but it pretty straightforward to read through, and I'll answer questions if there are any.
 
 Oh yeah, one last thing, no tests. I haven't written a line of code for several years, and on top of that this was my first stab writing code on a MAC. A few things might not be up to par, so I apologize for that.
+
+I spent a lot of hours trying to figure out how to connect to JIRA REST API for JIRA CLOUD and be able to use Linq expressions. The meat of that is below, hope it's helpful.
+
