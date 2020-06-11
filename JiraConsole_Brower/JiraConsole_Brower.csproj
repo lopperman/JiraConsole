@@ -82,9 +82,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JiraCard.cs" />
     <Compile Include="BuildPropNames.cs" />
+    <Compile Include="ConsoleHelpers\ConsoleLine.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ConsoleHelpers\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

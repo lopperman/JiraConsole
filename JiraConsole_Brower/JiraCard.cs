@@ -13,7 +13,7 @@ namespace JiraConsole_Brower
             
         }
 
-        public JiraCard(string id, string key, string status, string desc, DateTime created, DateTime updated)
+        public JiraCard(string id, string key, string status, string desc, DateTime created, DateTime updated, string type)
         {
             _id = id;
             Key = key;
@@ -21,6 +21,7 @@ namespace JiraConsole_Brower
             Created = created;
             Updated = updated;
             Status = status;
+            CardType = type;
         }
 
         private static double GetBusinessDays(DateTime startD, DateTime endD)
@@ -171,6 +172,7 @@ namespace JiraConsole_Brower
         public string Description { get; set; }
         public DateTime Created { get; set; }
         public DateTime Updated { get; set; }
+        public string CardType { get; set; }
 
         public List<JiraChangeLog> ChangeLogs
         {
