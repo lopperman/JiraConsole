@@ -26,6 +26,11 @@
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
+    <StartAction>Project</StartAction>
+    <StartArguments></StartArguments>
+    <ExternalConsole>true</ExternalConsole>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="RestSharp">
@@ -83,6 +88,7 @@
     <Compile Include="JiraCard.cs" />
     <Compile Include="BuildPropNames.cs" />
     <Compile Include="ConsoleHelpers\ConsoleLine.cs" />
+    <Compile Include="ConsoleHelpers\ConfigHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

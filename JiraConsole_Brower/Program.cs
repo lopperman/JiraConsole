@@ -15,20 +15,25 @@ namespace JiraConsole_Brower
     class MainClass
     {
         private static bool _initialized = false;
-        static string jiraUserName ;
-        static string jiraAPIToken ;
-        static string jiraBaseUrl ;
-        static string jiraProjectKey ;
+        static JiraConfiguration config = null;
+        //static string jiraUserName ;
+        //static string jiraAPIToken ;
+        //static string jiraBaseUrl ;
+        //static string jiraProjectKey ;
         static string filePath_JiraExpandedIssuesCSV ;
         public static ConsoleColor defaultForeground;
         public static ConsoleColor defaultBackground;
         static ConsoleLines consoleLines = new ConsoleLines();
         static JiraRestClientSettings _settings = null;
         static Jira _jira = null;
+        private static string[] _args = null;
 
         public static void Main(string[] args)
         {
+            _args = args;
+
             bool showMenu = true;
+
             if (!_initialized)
             {
                 defaultForeground = Console.ForegroundColor;
@@ -47,48 +52,47 @@ namespace JiraConsole_Brower
 
         private static bool MainMenu()
         {
-            //if (consoleLines.HasQueuedLines)
-            //{
-            //    consoleLines.WriteQueuedLines(true);
-            //}
+
             if (!_initialized)
             {
-                BuildNotInitializedQueue();
-                consoleLines.WriteQueuedLines(true);
-                string vs = Console.ReadLine();
-                string[] arr = vs.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                if (arr.Length == 4)
+                if (config == null && _args != null)
                 {
-                    jiraUserName = arr[0];
-                    jiraAPIToken = arr[1];
-                    jiraBaseUrl = arr[2];
-                    jiraProjectKey = arr[3];
-                    if (CreateRestClient())
+                    config = ConfigHelper.BuildConfig(_args);
+                }
+                if (config == null)
+                {
+                    BuildNotInitializedQueue();
+                    consoleLines.WriteQueuedLines(true);
+                    string vs = Console.ReadLine();
+                    if (string.IsNullOrWhiteSpace(vs)) vs = string.Empty;
+                    string[] arr = vs.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    config = ConfigHelper.BuildConfig(arr);
+
+                    if (config != null)
                     {
-                        _initialized = true;
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
+                        if (CreateRestClient())
+                            _initialized = true;
+                            return _initialized;
+                        }
+                        else
+                        {
+                            _initialized = false;
+                            WriteLine("Invalid arguments!", ConsoleColor.Yellow, ConsoleColor.DarkBlue, false);
+                            WriteLine("Enter arguments like this:  JiraConsole_Brower \"john.doe@atlassian.net\" \"JO5qzY7UfH8wxfi4ru4A3G4C\" \"https://company.atlasssian.net\" \"PRJ\"");
+                            WriteLine("Do you want to try again? (Y/N):");
+                            ConsoleKeyInfo keyInfo = Console.ReadKey();
+                            if (keyInfo.Key == ConsoleKey.Y)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+
                     }
                 }
-                else
-                {
-                    WriteLine("Invalid arguments!", ConsoleColor.Yellow, ConsoleColor.DarkBlue,false);
-                    WriteLine("Enter arguments like this:  JiraConsole_Brower \"john.doe@atlassian.net\" \"JO5qzY7UfH8wxfi4ru4A3G4C\" \"https://company.atlasssian.net\" \"PRJ\"");
-                    WriteLine("Do you want to try again? (Y/N):");
-                    ConsoleKeyInfo keyInfo = Console.ReadKey();
-                    if (keyInfo.Key == ConsoleKey.Y)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                    
-                }
+
             }
 
             return InitializedMenu();
@@ -113,16 +117,51 @@ namespace JiraConsole_Brower
                 if (keys.ToUpper() == "E")
                 {
                     return false;
-                }                
-                string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < arr.Length; i++)
-                {
-                    AnalyzeOneIssue(arr[i]);
                 }
+                //if (keys.ToUpper() == "S")
+                //{
+                    string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        AnalyzeOneIssue(arr[i]);
+                    }
+                //}
+
                 WriteLine("");
                 WriteLine("Press any key to continue.");
                 Console.ReadKey();
                 return true;
+            }
+            else if (resp.Key == ConsoleKey.M)
+            {
+                WriteLine("");
+                WriteLine("Enter Prefix, then Jira Card Key(s) separated by a space (e.g. POS 123 234), or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+                var keys = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(keys))
+                {
+                    return true;
+                }
+                if (keys.ToUpper() == "E")
+                {
+                    return false;
+                }
+                //if (keys.ToUpper() == "M")
+                //{
+                    string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    if (arr.Length >= 2)
+                    {
+                        string prefix = arr[0];
+                    AnalyzeIssues(arr[0], keys);
+                }
+
+
+                //}
+
+                WriteLine("");
+                WriteLine("Press any key to continue.");
+                Console.ReadKey();
+                return true;
+
             }
 
             return false;
@@ -134,6 +173,7 @@ namespace JiraConsole_Brower
             consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("(S)how Change History for Card");
+            consoleLines.AddConsoleLine("(M)Show Change History for Multiple Cards");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
@@ -153,9 +193,9 @@ namespace JiraConsole_Brower
                 //options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
                 //options.FetchBasicFields = true;
 
-                WriteLine(string.Format("connecting to {0}@{1} ...", jiraUserName, jiraBaseUrl));
-                _jira = Jira.CreateRestClient(jiraBaseUrl, jiraUserName, jiraAPIToken, _settings);
-                WriteLine("Successfully connected to Jira as " + jiraUserName);
+                WriteLine(string.Format("connecting to {0}@{1} ...", config.jiraUserName, config.jiraBaseUrl));
+                _jira = Jira.CreateRestClient(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken, _settings);
+                WriteLine("Successfully connected to Jira as " + config.jiraUserName);
 
             }
             catch (Exception ex)
@@ -176,6 +216,7 @@ namespace JiraConsole_Brower
             consoleLines.AddConsoleLine("2. Jira API Token");
             consoleLines.AddConsoleLine("3. Jira Base URL");
             consoleLines.AddConsoleLine("4. Jira Project Key");
+            consoleLines.AddConsoleLine("5. OPTIONAL Jira Card Prefix (e.g. POS-)");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("For Example:  JiraConsole_Brower \"john.doe@atlassian.net\" \"JO5qzY7UfH8wxfi4ru4A3G4C\" \"https://company.atlasssian.net\" \"PRJ\"");
             consoleLines.AddConsoleLine("Please initialize application now per the above example:");
@@ -234,6 +275,15 @@ namespace JiraConsole_Brower
         //    }
         //}
 
+        public static void AnalyzeIssues(string prefix, string cardNumbers)
+        {
+            string[] arr = cardNumbers.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 1; i < arr.Length; i++)
+            {
+                AnalyzeOneIssue(string.Format("{0}-{1}",prefix,arr[i]));
+            }
+        }
+
         public static void AnalyzeOneIssue(string key)
         {
             //var settings = new JiraRestClientSettings();
@@ -242,11 +292,11 @@ namespace JiraConsole_Brower
             WriteLine("");
             WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
 
-            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", jiraProjectKey));
+            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
             options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
             options.FetchBasicFields = true;
 
-            var issue = _jira.Issues.Queryable.Where(x => x.Project == jiraProjectKey && x.Key == key).FirstOrDefault();
+            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
 
             if (issue == null)
             {
