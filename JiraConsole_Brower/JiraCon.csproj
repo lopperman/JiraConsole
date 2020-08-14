@@ -5,9 +5,9 @@
     <Platform Condition=" '$(Platform)' == '' ">anycpu</Platform>
     <ProjectGuid>{75B4FAA9-2196-49AC-B507-5F862F79E1F7}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>JiraConsole_Brower</RootNamespace>
+    <RootNamespace>JConsole</RootNamespace>
     <AssemblyName>JiraConsole_Brower</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|anycpu' ">
     <DebugSymbols>true</DebugSymbols>
@@ -28,7 +28,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
     <StartAction>Project</StartAction>
-    <StartArguments></StartArguments>
+    <StartArguments>/Users/paulbrower/JConsoleConfig.txt</StartArguments>
     <ExternalConsole>true</ExternalConsole>
   </PropertyGroup>
   <ItemGroup>
@@ -73,7 +73,7 @@
       <HintPath>..\packages\Refactorius.Extensions.PropertyBag.10.1.2\lib\netstandard2.0\Refactorius.Extensions.PropertyBag.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
-      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.3.1.4\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.3.1.7\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Refactorius.Extensions.DependencyInjection">
       <HintPath>..\packages\Refactorius.Extensions.DependencyInjection.1.1.1\lib\netstandard2.0\Refactorius.Extensions.DependencyInjection.dll</HintPath>

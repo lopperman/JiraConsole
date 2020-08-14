@@ -16,10 +16,6 @@ namespace JiraConsole_Brower
     {
         private static bool _initialized = false;
         static JiraConfiguration config = null;
-        //static string jiraUserName ;
-        //static string jiraAPIToken ;
-        //static string jiraBaseUrl ;
-        //static string jiraProjectKey ;
         static string filePath_JiraExpandedIssuesCSV ;
         public static ConsoleColor defaultForeground;
         public static ConsoleColor defaultBackground;
@@ -46,7 +42,7 @@ namespace JiraConsole_Brower
             {
                 showMenu = MainMenu();
             }
-            WriteLine("Have a GREAT DAY!", ConsoleColor.DarkCyan, ConsoleColor.White,false);
+            consoleLines.ByeBye();
             Environment.Exit(0);
         }
 

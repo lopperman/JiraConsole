@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiraConsole_Brower", "JiraConsole_Brower\JiraConsole_Brower.csproj", "{75B4FAA9-2196-49AC-B507-5F862F79E1F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiraCon", "JiraConsole_Brower\JiraCon.csproj", "{75B4FAA9-2196-49AC-B507-5F862F79E1F7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -122,6 +122,12 @@ namespace JiraConsole_Brower.ConsoleHelpers
             _lines.Clear();
 
         }
+
+        public void ByeBye()
+        {
+            AddConsoleLine("   HAVE A GREAT DAY!!   ", ConsoleColor.DarkBlue, ConsoleColor.Yellow);
+            WriteQueuedLines(true);
+        }
     }
 
 }
