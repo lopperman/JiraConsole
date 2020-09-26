@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 using Newtonsoft.Json;
+using RestSharp;
 
 namespace JConsole
 {
@@ -56,8 +57,9 @@ namespace JConsole
             {
                 var resourceUrl = String.Format("rest/api/3/issue/{0}/changelog?maxResults=100&startAt={1}", issueKey, incr);
                 var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
-                var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token).ConfigureAwait(false);
-                //            var result = Enumerable.Empty<IssueChangeLog>();
+                var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
+                    .ConfigureAwait(false);
+
                 var changeLogs = response["values"];
                 var totalChangeLogs = response["total"];
 
