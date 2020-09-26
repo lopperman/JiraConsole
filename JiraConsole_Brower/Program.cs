@@ -23,6 +23,7 @@ namespace JiraConsole_Brower
         static JiraRestClientSettings _settings = null;
         static Jira _jira = null;
         private static string[] _args = null;
+        public static List<IssueType> issueTypes = null;
 
         public static void Main(string[] args)
         {
@@ -67,6 +68,7 @@ namespace JiraConsole_Brower
                     if (config != null)
                     {
                         if (CreateRestClient())
+                        {
                             _initialized = true;
                             return _initialized;
                         }
@@ -85,8 +87,34 @@ namespace JiraConsole_Brower
                             {
                                 return false;
                             }
-
+                        }
                     }
+                }
+
+                else
+                {
+                    if (CreateRestClient())
+                    {
+                        _initialized = true;
+                        return _initialized;
+                    }
+                    else
+                    {
+                        _initialized = false;
+                        WriteLine("Invalid arguments!", ConsoleColor.Yellow, ConsoleColor.DarkBlue, false);
+                        WriteLine("Enter arguments like this:  JiraConsole_Brower \"john.doe@atlassian.net\" \"JO5qzY7UfH8wxfi4ru4A3G4C\" \"https://company.atlasssian.net\" \"PRJ\"");
+                        WriteLine("Do you want to try again? (Y/N):");
+                        ConsoleKeyInfo keyInfo = Console.ReadKey();
+                        if (keyInfo.Key == ConsoleKey.Y)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+
                 }
 
             }
@@ -157,10 +185,86 @@ namespace JiraConsole_Brower
                 WriteLine("Press any key to continue.");
                 Console.ReadKey();
                 return true;
+            }
+            else if (resp.Key == ConsoleKey.F)
+            {
+                WriteLine("");
+                WriteLine("Enter filename with one story per line or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+                var keys = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(keys))
+                {
+                    return true;
+                }
+                if (keys.ToUpper() == "E")
+                {
+                    return false;
+                }
+                string inputFile = keys;
+
+                WriteLine("");
+                WriteLine("Enter filename to write output or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+                keys = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(keys))
+                {
+                    return true;
+                }
+                if (keys.ToUpper() == "E")
+                {
+                    return false;
+                }
+                string outputFile = keys;
+
+                AnalyzeAndWriteOutput(inputFile, outputFile);
+
+                WriteLine("");
+                WriteLine("Press any key to continue.");
+                Console.ReadKey();
+                return true;
 
             }
 
             return false;
+        }
+
+        private static void AnalyzeAndWriteOutput(string inputFile, string outputFile)
+        {
+            List<string> cardNumbers = BuildListFromInputFile(inputFile);
+
+            StreamWriter writer = new StreamWriter(outputFile, false);
+            foreach (string card in cardNumbers)
+            {
+                writer.Write(AnalyzeIssue(card));
+            }
+
+            writer.Close();
+        }
+
+        private static List<string> BuildListFromInputFile(string inputFile)
+        {
+            StreamReader reader = null;
+            List<string> ret = new List<string>();
+
+            try
+            {
+                reader = new StreamReader(inputFile);
+                while(!reader.EndOfStream)
+                {
+                    ret.Add(reader.ReadLine());
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error reading input File: {0}", ex.Message);
+            }
+            finally
+            {
+                if (reader != null)
+                {
+                    reader.Close();
+                }
+            }
+            return ret;
         }
 
         private static void BuildInitializedMenu()
@@ -170,13 +274,14 @@ namespace JiraConsole_Brower
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("(S)how Change History for Card");
             consoleLines.AddConsoleLine("(M)Show Change History for Multiple Cards");
+            consoleLines.AddConsoleLine("(F)Enter file path that contains 1 card per line, and file path for output");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
 
         private static bool CreateRestClient()
         {
-
+            bool ret = false;
             try
             {
                 List<JiraCard> jiraCards = new List<JiraCard>();
@@ -191,7 +296,14 @@ namespace JiraConsole_Brower
 
                 WriteLine(string.Format("connecting to {0}@{1} ...", config.jiraUserName, config.jiraBaseUrl));
                 _jira = Jira.CreateRestClient(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken, _settings);
-                WriteLine("Successfully connected to Jira as " + config.jiraUserName);
+                if (_jira != null)
+                {
+                    issueTypes = _jira.IssueTypes.GetIssueTypesForProjectAsync(config.jiraProjectKey).Result.ToList();
+                }
+                if (issueTypes != null && issueTypes.Count() > 0)
+                {
+                    ret = true;
+                }
 
             }
             catch (Exception ex)
@@ -202,17 +314,22 @@ namespace JiraConsole_Brower
                 Console.WriteLine("Sorry, there seems to be a problem connecting to Jira with the arguments you provided. Error: {0}, {1}\r\n\r\n{2}", ex.Message, ex.Source, ex.StackTrace);
                 return false;
             }
-            return true;
+
+            if (ret)
+            {
+                WriteLine("Successfully connected to Jira as " + config.jiraUserName);
+            }
+
+            return ret;
         }
 
         private static void BuildNotInitializedQueue()
         {
-            consoleLines.AddConsoleLine("This application can be initialized with 4 parameters:");
-            consoleLines.AddConsoleLine("1. Jira UserName");
-            consoleLines.AddConsoleLine("2. Jira API Token");
-            consoleLines.AddConsoleLine("3. Jira Base URL");
-            consoleLines.AddConsoleLine("4. Jira Project Key");
-            consoleLines.AddConsoleLine("5. OPTIONAL Jira Card Prefix (e.g. POS-)");
+            consoleLines.AddConsoleLine("This application can be initialized with");
+            consoleLines.AddConsoleLine("1. path to config file with arguments");
+            consoleLines.AddConsoleLine("OR");
+            consoleLines.AddConsoleLine("2. the following arguments:");
+            consoleLines.AddConsoleLine("   [Jira UserName] [Jira API Token] [Jira Base URL] [Jira Project Key] [OPTIONAL Jira Card Prefix]");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("For Example:  JiraConsole_Brower \"john.doe@atlassian.net\" \"JO5qzY7UfH8wxfi4ru4A3G4C\" \"https://company.atlasssian.net\" \"PRJ\"");
             consoleLines.AddConsoleLine("Please initialize application now per the above example:");
@@ -278,6 +395,88 @@ namespace JiraConsole_Brower
             {
                 AnalyzeOneIssue(string.Format("{0}-{1}",prefix,arr[i]));
             }
+        }
+
+        public static string AnalyzeIssue(string key)
+        {
+            //var settings = new JiraRestClientSettings();
+            //settings.EnableUserPrivacyMode = false;
+
+            WriteLine("");
+            WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
+
+            StringBuilder sb = new StringBuilder();
+
+            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+            options.FetchBasicFields = true;
+
+            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+
+            if (issue == null)
+            {
+                sb.AppendLine(string.Format("***** Jira Card: " + key + " NOT FOUND!", ConsoleColor.DarkBlue, ConsoleColor.White, false));
+                return sb.ToString();
+            }
+
+            var labels = issue.Labels;
+
+            var backClr = Console.BackgroundColor;
+            var foreClr = Console.ForegroundColor;
+
+            var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
+
+            List<string> importantFields = new List<string>();
+            importantFields.Add("status");
+            importantFields.Add("feature team choices");
+            importantFields.Add("labels");
+            importantFields.Add("resolution");
+
+
+
+            for (int i = 0; i < changeLogs.Count; i++)
+            {
+                IssueChangeLog changeLog = changeLogs[i];
+
+                
+
+                foreach (IssueChangeLogItem cli in changeLog.Items)
+                {
+                    if (!importantFields.Contains(cli.FieldName.ToLower()))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+
+
+                        if (cli.FieldName.ToLower().StartsWith("status"))
+                        {
+                            sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
+
+                            sb.AppendFormat("{0}", cli.ToValue);
+                            sb.AppendFormat(Environment.NewLine);
+                        }
+                        else if (cli.FieldName.ToLower().StartsWith("label"))
+                        {
+                            sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
+
+                            sb.AppendFormat("{0}", cli.ToValue);
+                            sb.AppendFormat(Environment.NewLine);
+                        }
+
+                        else
+                        {
+                            sb.AppendLine(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue));
+
+                        }
+
+                    }
+                }
+            }
+            sb.AppendLine(string.Format("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false));
+
+            return sb.ToString();
         }
 
         public static void AnalyzeOneIssue(string key)
