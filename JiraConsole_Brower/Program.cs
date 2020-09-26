@@ -277,34 +277,38 @@ namespace JiraConsole_Brower
             //string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
             string jql = "key = POS-426";
 
-            var issues = repo.GetIssues(jql);
+            //var issues = repo.GetIssues(jql);
 
-            var data = new JiraData(jql);
-            data.JiraIssues.AddRange(issues);
-            int counter = 0;
-            int totalIssues = data.JiraIssues.Count;
-            foreach (var iss in data.JiraIssues)
-            {
-                counter += 1;
-                var logs = repo.GetIssueChangeLogs(iss);
-                data.AddIssueChangeLogs(iss.Key.Value, logs);
+            //var data = new JiraData(jql);
+            //data.JiraIssues.AddRange(issues);
+            //int counter = 0;
+            //int totalIssues = data.JiraIssues.Count;
+            //foreach (var iss in data.JiraIssues)
+            //{
+            //    counter += 1;
+            //    var logs = repo.GetIssueChangeLogs(iss);
+            //    data.AddIssueChangeLogs(iss.Key.Value, logs);
 
-                consoleLines.AddConsoleLine(string.Format("{3} changeLogs for {0} ({1} / {2}", iss.Key.Value, counter, totalIssues,logs.Count));
+            //    consoleLines.AddConsoleLine(string.Format("{3} changeLogs for {0} ({1} / {2}", iss.Key.Value, counter, totalIssues,logs.Count));
 
-                if (counter % 10 == 0)
-                {
-                    consoleLines.WriteQueuedLines();
-                }
+            //    if (counter % 10 == 0)
+            //    {
+            //        consoleLines.WriteQueuedLines();
+            //    }
 
-            }
+            //}
 
-            if (consoleLines.HasQueuedLines)
-            {
-                consoleLines.WriteQueuedLines();
-            }
+            //if (consoleLines.HasQueuedLines)
+            //{
+            //    consoleLines.WriteQueuedLines();
+            //}
 
-            WriteLine("Saving JiraData to JSON file");
-            FileUtil.SaveToJSON(data,"/users/paulbrower/JiraData.json");
+            //WriteLine("Saving JiraData to JSON file");
+            //FileUtil.SaveToJSON(data,"/users/paulbrower/JiraData.json");
+
+
+            var whoKnows = repo.GetIssueChangeLogs("POS-426");
+            
 
             string xxx = "";
         }

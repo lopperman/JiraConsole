@@ -3,6 +3,8 @@ using Atlassian.Jira;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
+using Newtonsoft.Json;
 
 namespace JConsole
 {
@@ -35,47 +37,48 @@ namespace JConsole
 
         public List<IssueChangeLog> GetIssueChangeLogs(Issue issue)
         {
-            var res = issue.GetChangeLogsAsync().Result.ToList();
-
-            return res;
+            return GetIssueChangeLogs(issue.Key.Value);
         }
 
-        //public List<IssueChangeLog> GetIssueChangeLogs_Test(Issue iss)
-        //{
+        public List<IssueChangeLog> GetIssueChangeLogs(string issueKey)
+        {
+            return GetChangeLogsAsync(issueKey).Result;
+        }
 
-        //    iss.GetChangeLogsAsync..
+        private async Task<List<IssueChangeLog>> GetChangeLogsAsync(string issueKey, CancellationToken token = default(CancellationToken))
+        {
+            List<IssueChangeLog> result = new List<IssueChangeLog>();
 
+            int incr = 0;
+            int total = 0;
 
-        //    List<IssueChangeLog> ret = new List<IssueChangeLog>();
+            do
+            {
+                var resourceUrl = String.Format("rest/api/3/issue/{0}/changelog?maxResults=100&startAt={1}", issueKey, incr);
+                var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
+                var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token).ConfigureAwait(false);
+                //            var result = Enumerable.Empty<IssueChangeLog>();
+                var changeLogs = response["values"];
+                var totalChangeLogs = response["total"];
 
-        //    int incr = 0;
-        //    int total = 0;
+                if (totalChangeLogs != null)
+                {
+                    total = JsonConvert.DeserializeObject<Int32>(totalChangeLogs.ToString(), serializerSettings);
+                }
 
-        //    do
-        //    {
-        //        //searchOptions.StartAt = incr;
-        //        //searchOptions.MaxIssuesPerRequest = 500;
+                if (changeLogs != null)
+                {
+                    var items = changeLogs.Select(cl => JsonConvert.DeserializeObject<IssueChangeLog>(cl.ToString(), serializerSettings));
 
-        //        //iss.GetChangeLogsAsync.startAt = incr;
+                    incr += items.Count();
 
-        //        Task<IEnumerable<IssueChangeLog>> results = iss.GetChangeLogsAsync.GetIssueChangeLogs_Pagination
-        //        results.Wait();
+                    result.AddRange(items);
+                }
+            }
+            while (incr < total);
 
-        //        total = results.Result.TotalItems;
-
-        //        foreach (Issue i in results.Result)
-        //        {
-        //            issues.Add(i);
-        //        }
-
-        //        incr += results.Result.Count();
-        //    }
-        //    while (incr < total);
-
-        //    return issues;
-
-
-        //}
+            return result;
+        }
 
 
         public List<Issue> GetIssues(string jql)
