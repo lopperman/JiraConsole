@@ -1,18 +1,11 @@
 # JiraConsole
-Hacking together console app to expand IssueChangeLogs from Jira REST API
+Console app to work with Jira REST API via the Atlassian.SDK for .Net (v12.x.x)
 
-Built on Mac with Mono, so can compile and run on Mac or PC. 
+Targets .Net Framework 4.8 (built with Visual Studio for Mac)
 
-** Note, the 'Project Key' has nothing to do with security. It's the 'key' in Jira for you project ... e.g. a "Point of Sale" project might have a key called "POS" -- or however the project was set up.
-
-Mac Syntax: Mono JiraConsole_Brower.exe "[Jira Email]" "[Jira API Token]" "https://[Base Url]" "[Project Key]" "[Full Path including file name where the data file will be written"
-
-PC Syntax:  JiraConsole_Brower.exe "[Jira Email]" "[Jira API Token]" "https://[Base Url]" "[Project Key]" "[Full Path including file name where the data file will be written"
-
-There are a couple of minor magic strings that you might want to change. I'll make those all configurable soon, as I think this app will be helpful for other project at work, but it pretty straightforward to read through, and I'll answer questions if there are any.
-
-Oh yeah, one last thing, no tests. I haven't written a line of code for several years, and on top of that this was my first stab writing code on a MAC. A few things might not be up to par, so I apologize for that.
-
-I spent a lot of hours trying to figure out how to connect to JIRA REST API for JIRA CLOUD and be able to use Linq expressions. The meat of that is below, hope it's helpful.
+This project is somewhat new, and I'll get some tests and refactoring done soon, but it will currently query Jira for Project and Issues. It will also expand the Issue changeLog -- and if you're reading this you'll be happy to know that after many hours of pulling my hair out, I've implemented the ability to get ALL of the issue changeLogs! If you're not aware, the Atlassian.SDK v12 doesn't return more than 100 changeLogs, and doesn't support pagination of changeLogs like it does with Issues. See screenshot below for the magic.
 
 ![img](https://github.com/lopperman/JiraConsole/blob/master/JiraConsole_Brower/misc/JiraConsole1.png)
+
+# Get All Issue ChangeLogs!
+![img](https://github.com/lopperman/JiraConsole/blob/master/JiraConsole_Brower/misc/GetALLIssueChangeLogs.png)
