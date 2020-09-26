@@ -89,6 +89,8 @@
     <Compile Include="BuildPropNames.cs" />
     <Compile Include="ConsoleHelpers\ConsoleLine.cs" />
     <Compile Include="ConsoleHelpers\ConfigHelper.cs" />
+    <Compile Include="JiraRepo.cs" />
+    <Compile Include="JiraData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using JiraConsole_Brower.ConsoleHelpers;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
+using JConsole;
 
 namespace JiraConsole_Brower
 {
@@ -21,7 +23,7 @@ namespace JiraConsole_Brower
         public static ConsoleColor defaultBackground;
         static ConsoleLines consoleLines = new ConsoleLines();
         static JiraRestClientSettings _settings = null;
-        static Jira _jira = null;
+        static Atlassian.Jira.Jira _jira = null;
         private static string[] _args = null;
         public static List<IssueType> issueTypes = null;
 
@@ -225,9 +227,64 @@ namespace JiraConsole_Brower
                 return true;
 
             }
+            else if (resp.Key == ConsoleKey.X)
+            {
+                Sandbox();
 
+                WriteLine("");
+                WriteLine("Press any key to continue.");
+                Console.ReadKey();
+                return true;
+
+            }
             return false;
         }
+
+        private static void Sandbox()
+        {
+            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+            options.FetchBasicFields = true;
+
+
+            //            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+
+            System.Threading.Tasks.Task<Project> proj = _jira.Projects.GetProjectAsync(config.jiraProjectKey);
+
+            Project p = proj.GetAwaiter().GetResult();
+            consoleLines.AddConsoleLine(string.Format("Project Name: {0}", p.Name));
+            consoleLines.AddConsoleLine("");
+
+
+            IEnumerable<IssueType> issueTypes = p.GetIssueTypesAsync().GetAwaiter().GetResult();
+            consoleLines.AddConsoleLine("** Issue Types **");
+            foreach (var it in issueTypes)
+            {
+                
+                consoleLines.AddConsoleLine(String.Format("Id: {2}, Name: {0}, Desc: {1}",it.Name,it.Description,it.Id));
+            }
+
+            var repo = new JConsole.JiraRepo(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken);
+
+            Project x = repo.GetProject("POS");
+
+            var posIssue = repo.GetIssueAsync("POS-392").GetAwaiter().GetResult();
+            var bamIssue = repo.GetIssueAsync("BAM-2802").GetAwaiter().GetResult();
+
+            consoleLines.WriteQueuedLines();
+
+            var issues = repo.GetIssues("project in (BAM,POS) AND issueType in (Bug) AND updatedDate >= 2020-06-01 AND status not in (Backlog)");
+
+            var data = new JiraData();
+            data.JiraIssues.AddRange(issues);
+            foreach (var iss in data.JiraIssues)
+            {
+                data.AddIssueChangeLogs(iss.Key.Value, repo.GetIssueChangeLogs(iss));
+            }
+
+            string xxx = "";
+        }
+
 
         private static void AnalyzeAndWriteOutput(string inputFile, string outputFile)
         {
@@ -278,6 +335,7 @@ namespace JiraConsole_Brower
             consoleLines.AddConsoleLine("(S)how Change History for Card");
             consoleLines.AddConsoleLine("(M)Show Change History for Multiple Cards");
             consoleLines.AddConsoleLine("(F)Enter file path that contains 1 card per line, and file path for output");
+            consoleLines.AddConsoleLine("(X) Run Current Sandbox");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
@@ -298,7 +356,7 @@ namespace JiraConsole_Brower
                 //options.FetchBasicFields = true;
 
                 WriteLine(string.Format("connecting to {0}@{1} ...", config.jiraUserName, config.jiraBaseUrl));
-                _jira = Jira.CreateRestClient(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken, _settings);
+                _jira = Atlassian.Jira.Jira.CreateRestClient(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken, _settings);
                 if (_jira != null)
                 {
                     issueTypes = _jira.IssueTypes.GetIssueTypesForProjectAsync(config.jiraProjectKey).Result.ToList();
@@ -590,7 +648,7 @@ namespace JiraConsole_Brower
               
                 Console.WriteLine("connecting to {0}@{1} ...", jiraUserName, jiraBaseUrl);
 
-                var jira = Jira.CreateRestClient(jiraBaseUrl, jiraUserName, jiraAPIToken, settings);
+                var jira = Atlassian.Jira.Jira.CreateRestClient(jiraBaseUrl, jiraUserName, jiraAPIToken, settings);
 
                 //var issues = jira.Issues.GetIssuesFromJqlAsync(options).Result;
 
