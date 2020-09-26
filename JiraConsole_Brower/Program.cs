@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using JConsole;
+using JConsole.Utilities;
 
 namespace JiraConsole_Brower
 {
@@ -242,45 +243,68 @@ namespace JiraConsole_Brower
 
         private static void Sandbox()
         {
-            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
-            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
-            options.FetchBasicFields = true;
+            //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+            //options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+            //options.FetchBasicFields = true;
 
 
-            //            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+            ////            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
 
-            System.Threading.Tasks.Task<Project> proj = _jira.Projects.GetProjectAsync(config.jiraProjectKey);
+            //System.Threading.Tasks.Task<Project> proj = _jira.Projects.GetProjectAsync(config.jiraProjectKey);
 
-            Project p = proj.GetAwaiter().GetResult();
-            consoleLines.AddConsoleLine(string.Format("Project Name: {0}", p.Name));
-            consoleLines.AddConsoleLine("");
+            //Project p = proj.GetAwaiter().GetResult();
+            //consoleLines.AddConsoleLine(string.Format("Project Name: {0}", p.Name));
+            //consoleLines.AddConsoleLine("");
 
 
-            IEnumerable<IssueType> issueTypes = p.GetIssueTypesAsync().GetAwaiter().GetResult();
-            consoleLines.AddConsoleLine("** Issue Types **");
-            foreach (var it in issueTypes)
-            {
+            //IEnumerable<IssueType> issueTypes = p.GetIssueTypesAsync().GetAwaiter().GetResult();
+            //consoleLines.AddConsoleLine("** Issue Types **");
+            //foreach (var it in issueTypes)
+            //{
                 
-                consoleLines.AddConsoleLine(String.Format("Id: {2}, Name: {0}, Desc: {1}",it.Name,it.Description,it.Id));
-            }
+            //    consoleLines.AddConsoleLine(String.Format("Id: {2}, Name: {0}, Desc: {1}",it.Name,it.Description,it.Id));
+            //}
 
             var repo = new JConsole.JiraRepo(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken);
 
-            Project x = repo.GetProject("POS");
+//            Project x = repo.GetProject("POS");
 
-            var posIssue = repo.GetIssueAsync("POS-392").GetAwaiter().GetResult();
-            var bamIssue = repo.GetIssueAsync("BAM-2802").GetAwaiter().GetResult();
+            //var posIssue = repo.GetIssueAsync("POS-392").GetAwaiter().GetResult();
+            //var bamIssue = repo.GetIssueAsync("BAM-2802").GetAwaiter().GetResult();
 
-            consoleLines.WriteQueuedLines();
+            //consoleLines.WriteQueuedLines();
 
-            var issues = repo.GetIssues("project in (BAM,POS) AND issueType in (Bug) AND updatedDate >= 2020-06-01 AND status not in (Backlog)");
+            //string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
+            string jql = "key = POS-426";
 
-            var data = new JiraData();
+            var issues = repo.GetIssues(jql);
+
+            var data = new JiraData(jql);
             data.JiraIssues.AddRange(issues);
+            int counter = 0;
+            int totalIssues = data.JiraIssues.Count;
             foreach (var iss in data.JiraIssues)
             {
-                data.AddIssueChangeLogs(iss.Key.Value, repo.GetIssueChangeLogs(iss));
+                counter += 1;
+                var logs = repo.GetIssueChangeLogs(iss);
+                data.AddIssueChangeLogs(iss.Key.Value, logs);
+
+                consoleLines.AddConsoleLine(string.Format("{3} changeLogs for {0} ({1} / {2}", iss.Key.Value, counter, totalIssues,logs.Count));
+
+                if (counter % 10 == 0)
+                {
+                    consoleLines.WriteQueuedLines();
+                }
+
             }
+
+            if (consoleLines.HasQueuedLines)
+            {
+                consoleLines.WriteQueuedLines();
+            }
+
+            WriteLine("Saving JiraData to JSON file");
+            FileUtil.SaveToJSON(data,"/users/paulbrower/JiraData.json");
 
             string xxx = "";
         }

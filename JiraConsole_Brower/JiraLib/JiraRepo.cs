@@ -6,14 +6,16 @@ using System.Threading.Tasks;
 
 namespace JConsole
 {
-    public class JiraRepo
+    public class JiraRepo: IJiraRepo
     {
         private Atlassian.Jira.Jira _jira;
 
         public JiraRepo(string server, string userName, string password)
         {
             _jira = Atlassian.Jira.Jira.CreateRestClient(server, userName, password);
-            _jira.MaxIssuesPerRequest = 50;
+
+            _jira.Issues.MaxIssuesPerRequest = 500;
+
         }
 
         public Project GetProject(string key)
@@ -33,8 +35,48 @@ namespace JConsole
 
         public List<IssueChangeLog> GetIssueChangeLogs(Issue issue)
         {
-            return issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
+            var res = issue.GetChangeLogsAsync().Result.ToList();
+
+            return res;
         }
+
+        //public List<IssueChangeLog> GetIssueChangeLogs_Test(Issue iss)
+        //{
+
+        //    iss.GetChangeLogsAsync..
+
+
+        //    List<IssueChangeLog> ret = new List<IssueChangeLog>();
+
+        //    int incr = 0;
+        //    int total = 0;
+
+        //    do
+        //    {
+        //        //searchOptions.StartAt = incr;
+        //        //searchOptions.MaxIssuesPerRequest = 500;
+
+        //        //iss.GetChangeLogsAsync.startAt = incr;
+
+        //        Task<IEnumerable<IssueChangeLog>> results = iss.GetChangeLogsAsync.GetIssueChangeLogs_Pagination
+        //        results.Wait();
+
+        //        total = results.Result.TotalItems;
+
+        //        foreach (Issue i in results.Result)
+        //        {
+        //            issues.Add(i);
+        //        }
+
+        //        incr += results.Result.Count();
+        //    }
+        //    while (incr < total);
+
+        //    return issues;
+
+
+        //}
+
 
         public List<Issue> GetIssues(string jql)
         {
@@ -43,14 +85,14 @@ namespace JConsole
             int incr = 0;
             int total = 0;
 
-            IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
+//            IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
 
             do
             {
-                searchOptions.StartAt = incr;
-                searchOptions.MaxIssuesPerRequest = 20;
+                //searchOptions.StartAt = incr;
+                //searchOptions.MaxIssuesPerRequest = 500;
 
-                Task<IPagedQueryResult<Issue>> results = _jira.Issues.GetIssuesFromJqlAsync(jql, 20, incr);
+                Task<IPagedQueryResult<Issue>> results = _jira.Issues.GetIssuesFromJqlAsync(jql, _jira.Issues.MaxIssuesPerRequest, incr);
                 results.Wait();
 
                 total = results.Result.TotalItems;
@@ -124,5 +166,14 @@ namespace JConsole
         //        return issue;
         //    });
         //}
+    }
+
+    public interface IJiraRepo
+    {
+        Project GetProject(string key);
+        Task<Project> GetProjectAsync(string key);
+        Task<Issue> GetIssueAsync(string key);
+        List<IssueChangeLog> GetIssueChangeLogs(Issue issue);
+        List<Issue> GetIssues(string jql);
     }
 }

@@ -89,14 +89,18 @@
     <Compile Include="BuildPropNames.cs" />
     <Compile Include="ConsoleHelpers\ConsoleLine.cs" />
     <Compile Include="ConsoleHelpers\ConfigHelper.cs" />
-    <Compile Include="JiraRepo.cs" />
     <Compile Include="JiraData.cs" />
+    <Compile Include="Utilities\FileUtil.cs" />
+    <Compile Include="JiraLib\JHelper.cs" />
+    <Compile Include="JiraLib\JiraRepo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ConsoleHelpers\" />
+    <Folder Include="Utilities\" />
+    <Folder Include="JiraLib\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

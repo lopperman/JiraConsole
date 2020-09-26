@@ -1,24 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Atlassian.Jira;
+using Newtonsoft.Json;
 
 namespace JConsole
 {
     public class JiraData
     {
 
+
+        private string _sourceJQL = string.Empty;
+        public string SourceJQL { get; }
         private List<Issue> _issues = new List<Issue>();
         private SortedList<string, List<IssueChangeLog>> _changeLog = new SortedList<string, List<IssueChangeLog>>();
 
+        [JsonConstructor]
         public JiraData()
         {
+            //empty constructor required for JSON deserialization
         }
 
+        public JiraData(string jql)
+        {
+            _sourceJQL = jql;
+        }
+
+        
         public List<Issue> JiraIssues
         {
             get
             {
                 return _issues;
+            }
+        }
+
+        public SortedList<string, List<IssueChangeLog>> ChangeLogList
+        {
+            get
+            {
+                return _changeLog;
             }
         }
 
