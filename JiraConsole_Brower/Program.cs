@@ -65,6 +65,9 @@ namespace JiraConsole_Brower
                     string[] arr = vs.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     config = ConfigHelper.BuildConfig(arr);
 
+                    consoleLines.configInfo = string.Format("User: {0}, Project Key: {1}", config.jiraUserName, config.jiraProjectKey);
+
+
                     if (config != null)
                     {
                         if (CreateRestClient())
@@ -287,7 +290,7 @@ namespace JiraConsole_Brower
                 List<JiraCard> jiraCards = new List<JiraCard>();
 
                 _settings = new JiraRestClientSettings();
-                _settings.EnableUserPrivacyMode = false;
+                _settings.EnableUserPrivacyMode = true;
 
 
                 //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", jiraProjectKey));
@@ -318,6 +321,8 @@ namespace JiraConsole_Brower
             if (ret)
             {
                 WriteLine("Successfully connected to Jira as " + config.jiraUserName);
+                consoleLines.configInfo = string.Format("User: {0}, Project Key: {1}", config.jiraUserName, config.jiraProjectKey);
+
             }
 
             return ret;

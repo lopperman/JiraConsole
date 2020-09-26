@@ -10,6 +10,7 @@ namespace JiraConsole_Brower.ConsoleHelpers
         public bool UseColors { get; set; }
         public string Text { get; set; }
         public bool WritePartialLine { get; set; }
+        
 
         public ConsoleLine(string text): this(text,false)
         {
@@ -40,6 +41,7 @@ namespace JiraConsole_Brower.ConsoleHelpers
     public class ConsoleLines
     {
         private SortedDictionary<int, ConsoleLine> _lines = new SortedDictionary<int, ConsoleLine>();
+        public string configInfo = string.Empty;
 
         public SortedDictionary<int, ConsoleLine> Lines
         {
@@ -98,7 +100,14 @@ namespace JiraConsole_Brower.ConsoleHelpers
                 Console.Clear();
                 Console.ForegroundColor = ConsoleColor.Black;
                 Console.BackgroundColor = ConsoleColor.White;
-                Console.WriteLine("JiraConsole (Not Trademarked) - written by Paul Brower");
+
+                string title = string.Format("JiraConsole (Not Trademarked) - written by Paul Brower");
+
+                Console.WriteLine(title);
+                if (!string.IsNullOrEmpty(configInfo))
+                {
+                    Console.WriteLine(configInfo);
+                }
                 Console.ForegroundColor = MainClass.defaultForeground;
                 Console.BackgroundColor = MainClass.defaultBackground;
             }
