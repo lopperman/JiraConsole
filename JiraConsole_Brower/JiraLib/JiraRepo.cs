@@ -46,7 +46,7 @@ namespace JConsole
             return GetChangeLogsAsync(issueKey).Result;
         }
 
-        private async Task<List<IssueChangeLog>> GetChangeLogsAsync(string issueKey, CancellationToken token = default(CancellationToken))
+        public async Task<List<IssueChangeLog>> GetChangeLogsAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
             List<IssueChangeLog> result = new List<IssueChangeLog>();
 
