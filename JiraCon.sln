@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiraTools", "JiraTools\JiraTools.csproj", "{06B51764-ED8B-4CEA-A9BC-CF33399D5530}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|anycpu = Debug|anycpu
@@ -18,5 +20,12 @@ Global
 		{75B4FAA9-2196-49AC-B507-5F862F79E1F7}.Debug|anycpu.Build.0 = Debug|anycpu
 		{75B4FAA9-2196-49AC-B507-5F862F79E1F7}.Release|anycpu.ActiveCfg = Release|anycpu
 		{75B4FAA9-2196-49AC-B507-5F862F79E1F7}.Release|anycpu.Build.0 = Release|anycpu
+		{06B51764-ED8B-4CEA-A9BC-CF33399D5530}.Debug|anycpu.ActiveCfg = Debug|Any CPU
+		{06B51764-ED8B-4CEA-A9BC-CF33399D5530}.Debug|anycpu.Build.0 = Debug|Any CPU
+		{06B51764-ED8B-4CEA-A9BC-CF33399D5530}.Release|anycpu.ActiveCfg = Release|Any CPU
+		{06B51764-ED8B-4CEA-A9BC-CF33399D5530}.Release|anycpu.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{06B51764-ED8B-4CEA-A9BC-CF33399D5530} = {29C37700-FCBF-4A78-B018-8F94C6916240}
 	EndGlobalSection
 EndGlobal
