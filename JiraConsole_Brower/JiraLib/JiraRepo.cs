@@ -11,7 +11,8 @@ namespace JConsole
 {
     public class JiraRepo: IJiraRepo
     {
-        private Atlassian.Jira.Jira _jira;
+        private Jira _jira;
+        
 
         public JiraRepo(string server, string userName, string password)
         {
@@ -19,6 +20,14 @@ namespace JConsole
 
             _jira.Issues.MaxIssuesPerRequest = 500;
 
+        }
+
+        public Jira GetJira
+        {
+            get
+            {
+                return _jira;
+            }
         }
 
         public Project GetProject(string key)
@@ -115,6 +124,17 @@ namespace JConsole
         
         }
 
+
+        public Issue GetIssue(string key)
+        {
+            //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+            IssueSearchOptions options = new IssueSearchOptions(string.Format("Key = {0}", key));
+            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+            options.FetchBasicFields = true;            
+
+            return GetJira.Issues.Queryable.Where(x=>x.Key == key).FirstOrDefault();
+
+        }
 
 
         //public Task<List<Issue>> GetEpicBySummaryAsync(string project, string summary)

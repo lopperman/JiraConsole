@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JConsole;
 using JConsole.Utilities;
+using Terminal.Gui;
 
 namespace JiraConsole_Brower
 {
@@ -19,17 +20,18 @@ namespace JiraConsole_Brower
     {
         private static bool _initialized = false;
         static JiraConfiguration config = null;
-        static string filePath_JiraExpandedIssuesCSV ;
         public static ConsoleColor defaultForeground;
         public static ConsoleColor defaultBackground;
         static ConsoleLines consoleLines = new ConsoleLines();
         static JiraRestClientSettings _settings = null;
-        static Atlassian.Jira.Jira _jira = null;
         private static string[] _args = null;
-        public static List<IssueType> issueTypes = null;
+
+        public static JiraRepo _jiraRepo = null;
 
         public static void Main(string[] args)
         {
+
+
             _args = args;
 
             bool showMenu = true;
@@ -384,14 +386,17 @@ namespace JiraConsole_Brower
                 //options.FetchBasicFields = true;
 
                 WriteLine(string.Format("connecting to {0}@{1} ...", config.jiraUserName, config.jiraBaseUrl));
-                _jira = Atlassian.Jira.Jira.CreateRestClient(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken, _settings);
-                if (_jira != null)
+                _jiraRepo = new JiraRepo(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken);
+
+                //                _jira = Atlassian.Jira.Jira.CreateRestClient(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken, _settings);
+                List<IssueType> testList = null;
+                if (_jiraRepo != null)
                 {
-                    issueTypes = _jira.IssueTypes.GetIssueTypesForProjectAsync(config.jiraProjectKey).Result.ToList();
-                }
-                if (issueTypes != null && issueTypes.Count() > 0)
-                {
-                    ret = true;
+                    var test = _jiraRepo.GetJira.IssueTypes.GetIssueTypesAsync().Result.ToList();
+                    if (test != null && test.Count > 0)
+                    {
+                        ret = true;
+                    }
                 }
 
             }
@@ -502,7 +507,7 @@ namespace JiraConsole_Brower
             options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
             options.FetchBasicFields = true;
 
-            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+            var issue = _jiraRepo.GetJira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
 
             if (issue == null)
             {
@@ -578,11 +583,13 @@ namespace JiraConsole_Brower
             WriteLine("");
             WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
 
-            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
-            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
-            options.FetchBasicFields = true;
+            //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+            //options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+            //options.FetchBasicFields = true;
 
-            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+            //var issue = _jiraRepo.GetJira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+
+            var issue = _jiraRepo.GetIssue(key);
 
             if (issue == null)
             {
