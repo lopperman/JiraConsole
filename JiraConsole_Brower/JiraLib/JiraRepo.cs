@@ -16,7 +16,11 @@ namespace JConsole
 
         public JiraRepo(string server, string userName, string password)
         {
-            _jira = Atlassian.Jira.Jira.CreateRestClient(server, userName, password);
+            JiraRestClientSettings settings = new JiraRestClientSettings();
+            settings.EnableUserPrivacyMode = true;
+            
+
+            _jira = Atlassian.Jira.Jira.CreateRestClient(server, userName, password,settings);
 
             _jira.Issues.MaxIssuesPerRequest = 500;
 
@@ -91,6 +95,44 @@ namespace JConsole
             return result;
         }
 
+        public List<Issue> GetIssues(string jql, bool basicFields, params string[] additionalFields)
+        {
+            List<Issue> issues = new List<Issue>();
+
+            int incr = 0;
+            int total = 0;
+
+            IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
+            searchOptions.FetchBasicFields = basicFields;
+            searchOptions.MaxIssuesPerRequest = _jira.Issues.MaxIssuesPerRequest;
+            
+            if (additionalFields != null)
+            {
+                searchOptions.AdditionalFields = additionalFields.ToList();
+            }
+
+
+            do
+            {
+                searchOptions.StartAt = incr;
+
+                Task<IPagedQueryResult<Issue>> results = _jira.Issues.GetIssuesFromJqlAsync(searchOptions);
+                results.Wait();
+
+                total = results.Result.TotalItems;
+
+                foreach (Issue i in results.Result)
+                {
+                    issues.Add(i);
+                }
+
+                incr += results.Result.Count();
+            }
+            while (incr < total);
+
+            return issues;
+
+        }
 
         public List<Issue> GetIssues(string jql)
         {
@@ -99,7 +141,8 @@ namespace JConsole
             int incr = 0;
             int total = 0;
 
-//            IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
+            IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
+            
 
             do
             {
@@ -115,7 +158,7 @@ namespace JConsole
                 {
                     issues.Add(i);
                 }
-
+                
                 incr += results.Result.Count();
             }
             while (incr < total);
@@ -124,6 +167,28 @@ namespace JConsole
         
         }
 
+        /// <summary>
+        /// Get Issues (Slow) - faster to use GetIssues(string jql)
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public List<Issue> GetIssues(params string[] keys)
+        {
+            List<Issue> issues = new List<Issue>();
+            if (keys != null && keys.Length > 0)
+            {
+                for (int i = 0; i < keys.Count(); i ++)
+                {
+                    var issue = GetIssue(keys[i]);
+                    if (issue != null)
+                    {
+                        issues.Add(issue);
+                    }
+                        
+                }
+            }
+            return issues;
+        }
 
         public Issue GetIssue(string key)
         {
@@ -135,6 +200,7 @@ namespace JConsole
             return GetJira.Issues.Queryable.Where(x=>x.Key == key).FirstOrDefault();
 
         }
+
 
 
         //public Task<List<Issue>> GetEpicBySummaryAsync(string project, string summary)

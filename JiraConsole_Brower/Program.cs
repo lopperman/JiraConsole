@@ -245,6 +245,23 @@ namespace JiraConsole_Brower
 
         private static void Sandbox()
         {
+
+//            string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
+            string jql = "key = POS-973";
+            var issues = _jiraRepo.GetIssues(jql, false, "Reporter");
+
+            
+
+            string xxx = "";
+
+
+            //var issueTypes = _jiraRepo.GetJira.IssueTypes.GetIssueTypesAsync().Result.ToList();
+
+            //var issue973 = _jiraRepo.GetIssue("POS-973");
+
+            //List<CustomFieldValue> customFields = issue973.CustomFields.ToList();
+
+            return;
             //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
             //options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
             //options.FetchBasicFields = true;
@@ -277,7 +294,7 @@ namespace JiraConsole_Brower
             //consoleLines.WriteQueuedLines();
 
             //string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
-            string jql = "key = POS-426";
+            //string jql = "key = POS-426";
 
             //var issues = repo.GetIssues(jql);
 
@@ -312,7 +329,7 @@ namespace JiraConsole_Brower
             var whoKnows = repo.GetIssueChangeLogs("POS-426");
             
 
-            string xxx = "";
+            
         }
 
 
