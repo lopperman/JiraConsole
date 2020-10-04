@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Newtonsoft.Json;
 using RestSharp;
+using Newtonsoft.Json.Linq;
 
 namespace JConsole
 {
@@ -26,13 +27,19 @@ namespace JConsole
 
         }
 
-        public Jira GetJira
+        public Jira GetJira()
+        {
+            return _jira;
+        }
+
+        public ServerInfo ServerInfo
         {
             get
             {
-                return _jira;
+                return _jira.ServerInfo.GetServerInfoAsync().Result;
             }
         }
+
 
         public Project GetProject(string key)
         {
@@ -43,6 +50,7 @@ namespace JConsole
         {
             return await _jira.Projects.GetProjectAsync(key);
         }
+
 
         public async Task<Issue> GetIssueAsync(string key)
         {
@@ -59,6 +67,55 @@ namespace JConsole
             return GetChangeLogsAsync(issueKey).Result;
         }
 
+
+        //TODO:  implement /rest/api/2/issue/{issueIdOrKey}/transitions
+
+
+        public List<IssueStatus> GetIssueTypeStatuses(string projKey, string issueType)
+        {
+            return GetIssueTypeStatusesAsync(projKey, issueType).GetAwaiter().GetResult().ToList();
+        }
+        
+        public async Task<List<IssueStatus>> GetIssueTypeStatusesAsync(string projKey, string issueType, CancellationToken token = default(CancellationToken))
+        {
+
+            var resourceUrl = String.Format("rest/api/3/project/{0}/statuses", projKey);
+            var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
+            Newtonsoft.Json.Linq.JToken response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
+                .ConfigureAwait(false);
+
+            IJEnumerable<JToken> values = response.Values();
+
+
+
+
+            foreach (var child in response.Values())
+            {
+                if (child.HasValues)
+                {
+                    var x = child.Values();
+                    var gg = child.HasValues;
+
+                }
+            }
+
+
+            //var json = response["values"];
+
+            //    total = JsonConvert.DeserializeObject<Int32>(totalChangeLogs.ToString(), serializerSettings);
+
+            //if (changeLogs != null)
+            //{
+            //    var items = changeLogs.Select(cl => JsonConvert.DeserializeObject<IssueChangeLog>(cl.ToString(), serializerSettings));
+
+            //    incr += items.Count();
+
+            //    result.AddRange(items);
+            //}
+
+            return null;
+        }
+
         public async Task<List<IssueChangeLog>> GetChangeLogsAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
             List<IssueChangeLog> result = new List<IssueChangeLog>();
@@ -73,8 +130,8 @@ namespace JConsole
                 var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
                     .ConfigureAwait(false);
 
-                var changeLogs = response["values"];
-                var totalChangeLogs = response["total"];
+                JToken changeLogs = response["values"];
+                JToken totalChangeLogs = response["total"];
 
                 if (totalChangeLogs != null)
                 {
@@ -136,35 +193,7 @@ namespace JConsole
 
         public List<Issue> GetIssues(string jql)
         {
-            List<Issue> issues = new List<Issue>();
-
-            int incr = 0;
-            int total = 0;
-
-            IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
-            
-
-            do
-            {
-                //searchOptions.StartAt = incr;
-                //searchOptions.MaxIssuesPerRequest = 500;
-
-                Task<IPagedQueryResult<Issue>> results = _jira.Issues.GetIssuesFromJqlAsync(jql, _jira.Issues.MaxIssuesPerRequest, incr);
-                results.Wait();
-
-                total = results.Result.TotalItems;
-
-                foreach (Issue i in results.Result)
-                {
-                    issues.Add(i);
-                }
-                
-                incr += results.Result.Count();
-            }
-            while (incr < total);
-
-            return issues;
-        
+            return GetIssues(jql, true);        
         }
 
         /// <summary>
@@ -197,9 +226,36 @@ namespace JConsole
             options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
             options.FetchBasicFields = true;            
 
-            return GetJira.Issues.Queryable.Where(x=>x.Key == key).FirstOrDefault();
+            return GetJira().Issues.Queryable.Where(x=>x.Key == key).FirstOrDefault();
 
         }
+
+        public List<IssueType> GetIssueTypes(string projectKey)
+        {
+            var proj = GetProject(projectKey);
+
+            if (proj != null)
+            {
+                return proj.GetIssueTypesAsync().Result.ToList();
+            }
+
+            return null;
+
+        }
+
+        public List<ProjectComponent> GetProjectComponents(string projectKey)
+        {
+            return GetProject(projectKey).GetComponentsAsync().Result.ToList();
+        }
+
+
+        public List<IssueStatus> GetIssueStatuses()
+        {
+
+            return _jira.Statuses.GetStatusesAsync().Result.ToList();
+
+        }
+
 
 
 

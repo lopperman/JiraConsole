@@ -246,13 +246,17 @@ namespace JiraConsole_Brower
         private static void Sandbox()
         {
 
-//            string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
-            string jql = "key = POS-973";
-            var issues = _jiraRepo.GetIssues(jql, false, "Reporter");
+
+            var info = _jiraRepo.GetIssueTypeStatuses("POS", "Story");
+
+
+
+            //string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
+            //string jql = "key = POS-973";
+            //var issues = _jiraRepo.GetIssues(jql, false, "Reporter");
 
             
-
-            string xxx = "";
+            
 
 
             //var issueTypes = _jiraRepo.GetJira.IssueTypes.GetIssueTypesAsync().Result.ToList();
@@ -409,7 +413,7 @@ namespace JiraConsole_Brower
                 List<IssueType> testList = null;
                 if (_jiraRepo != null)
                 {
-                    var test = _jiraRepo.GetJira.IssueTypes.GetIssueTypesAsync().Result.ToList();
+                    var test = _jiraRepo.GetJira().IssueTypes.GetIssueTypesAsync().Result.ToList();
                     if (test != null && test.Count > 0)
                     {
                         ret = true;
@@ -524,7 +528,7 @@ namespace JiraConsole_Brower
             options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
             options.FetchBasicFields = true;
 
-            var issue = _jiraRepo.GetJira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+            var issue = _jiraRepo.GetJira().Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
 
             if (issue == null)
             {
