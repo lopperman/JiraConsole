@@ -55,7 +55,7 @@ namespace JConsole
 
         public async Task<Issue> GetIssueAsync(string key)
         {
-            return await _jira.Issues.GetIssueAsync(key);
+            return await _jira.Issues.GetIssueAsync(key) as Issue;
         }
 
         public List<IssueChangeLog> GetIssueChangeLogs(Issue issue)
@@ -181,7 +181,7 @@ namespace JConsole
 
                 foreach (Issue i in results.Result)
                 {
-                    issues.Add(i);
+                    issues.Add((Issue)i);
                 }
 
                 incr += results.Result.Count();

@@ -246,8 +246,37 @@ namespace JiraConsole_Brower
         private static void Sandbox()
         {
 
+            //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived)";
+            string jql = "key in (BAM-1238, BAM-2170, POS-426)";
+            var issues = _jiraRepo.GetIssues(jql, true, "Feature Team Choices");
 
-            var info = _jiraRepo.GetIssueTypeStatuses("POS", "Story");
+            SortedDictionary<string, List<IssueChangeLog>> list = new SortedDictionary<string, List<IssueChangeLog>>();
+
+            int counter = 0;
+
+            SortedList<string, int> changeLogsOver100 = new SortedList<string, int>();
+
+            foreach (var issue in issues)
+            {
+                counter += 1;
+                WriteLine(string.Format("{0} ({1:0000}/{2:0000}) - getting change logs", issue.Key.Value, counter, issues.Count));
+                var cLogs = _jiraRepo.GetIssueChangeLogs(issue);
+                if (cLogs != null && cLogs.Count > 0)
+                {
+                    list.Add(issue.Key.Value, cLogs);
+                    WriteLine(string.Format("{0} ({1:0000}/{2:0000}) - {3} changeLogs", issue.Key.Value, counter, issues.Count,cLogs.Count));
+                    if (cLogs.Count > 100)
+                    {
+                        changeLogsOver100.Add(issue.Key.Value, cLogs.Count);
+                    }
+                }
+                else
+                {
+                    list.Add(issue.Key.Value, null);
+                }
+            }
+
+            //var info = _jiraRepo.GetIssueTypeStatuses("POS", "Story");
 
 
 
@@ -255,8 +284,8 @@ namespace JiraConsole_Brower
             //string jql = "key = POS-973";
             //var issues = _jiraRepo.GetIssues(jql, false, "Reporter");
 
-            
-            
+
+
 
 
             //var issueTypes = _jiraRepo.GetJira.IssueTypes.GetIssueTypesAsync().Result.ToList();
