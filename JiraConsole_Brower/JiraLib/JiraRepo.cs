@@ -7,6 +7,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using RestSharp;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace JConsole
 {
@@ -67,54 +68,54 @@ namespace JConsole
             return GetChangeLogsAsync(issueKey).Result;
         }
 
+        public List<JiraFilter> GetJiraFiltersFavorites()
+        {
+            return _jira.Filters.GetFavouritesAsync().GetAwaiter().GetResult().ToList();
+        }
 
         //TODO:  implement /rest/api/2/issue/{issueIdOrKey}/transitions
 
 
         public List<IssueStatus> GetIssueTypeStatuses(string projKey, string issueType)
         {
+
+            //var resourceUrl = String.Format("rest/api/3/project/{0}/statuses", projKey);
+            //var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
+            //IRestRequest req = new RestRequest(resourceUrl, Method.GET);
+            //JToken resp = _jira.RestClient.ExecuteRequestAsync(req).GetAwaiter().GetResult();
+
+
+
+            //return null;
             return GetIssueTypeStatusesAsync(projKey, issueType).GetAwaiter().GetResult().ToList();
         }
+
+
+        
         
         public async Task<List<IssueStatus>> GetIssueTypeStatusesAsync(string projKey, string issueType, CancellationToken token = default(CancellationToken))
         {
+
+            var ret = new List<IssueStatus>();
+
 
             var resourceUrl = String.Format("rest/api/3/project/{0}/statuses", projKey);
             var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
             Newtonsoft.Json.Linq.JToken response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
                 .ConfigureAwait(false);
 
-            IJEnumerable<JToken> values = response.Values();
-
-
-
-
-            foreach (var child in response.Values())
+            foreach (var parent in response)
             {
-                if (child.HasValues)
+                if (parent["name"].ToString() == issueType)
                 {
-                    var x = child.Values();
-                    var gg = child.HasValues;
-
+                    var items = parent["statuses"].Select(a => JsonConvert.DeserializeObject<IssueStatus>(a.ToString(), serializerSettings));
+                    ret.AddRange(items);
                 }
             }
 
-
-            //var json = response["values"];
-
-            //    total = JsonConvert.DeserializeObject<Int32>(totalChangeLogs.ToString(), serializerSettings);
-
-            //if (changeLogs != null)
-            //{
-            //    var items = changeLogs.Select(cl => JsonConvert.DeserializeObject<IssueChangeLog>(cl.ToString(), serializerSettings));
-
-            //    incr += items.Count();
-
-            //    result.AddRange(items);
-            //}
-
-            return null;
+            return ret;
         }
+
 
         public async Task<List<IssueChangeLog>> GetChangeLogsAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
