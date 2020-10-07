@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using JConsole;
 using JConsole.Utilities;
 using Terminal.Gui;
+using JConsole.JiraLib;
 
 namespace JiraConsole_Brower
 {
@@ -247,8 +248,32 @@ namespace JiraConsole_Brower
         {
 
             //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived)";
-            string jql = "key in (BAM-1238, BAM-2170, POS-426)";
-            var issues = _jiraRepo.GetIssues(jql, true, "Feature Team Choices");
+            string jql = "key in (BAM-1238, BAM-2170, POS-426, BAM-2154)";
+            var issues = _jiraRepo.GetIssues(jql, true, "Feature Team Choices","Components","ParentIssueKey");
+
+            List<JIssue> jissues = new List<JIssue>();
+
+            foreach (var issue in issues)
+            {
+                JIssue newIssue = new JIssue(issue);
+                newIssue.AddChangeLogs(_jiraRepo.GetIssueChangeLogs(issue));
+
+                var subTasks = _jiraRepo.GetSubTasksAsList(issue);
+                if (subTasks != null && subTasks.Count() > 0)
+                {
+                    foreach (var st in subTasks)
+                    {
+                        var subTaskIssue = new JIssue(st);
+                        subTaskIssue.AddChangeLogs(_jiraRepo.GetIssueChangeLogs(st));
+                        newIssue.AddSubTask(st);
+                    }
+                }
+                jissues.Add(newIssue);
+            }
+
+
+
+
 
             SortedDictionary<string, List<IssueChangeLog>> list = new SortedDictionary<string, List<IssueChangeLog>>();
 

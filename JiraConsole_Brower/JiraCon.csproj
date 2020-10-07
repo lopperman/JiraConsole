@@ -99,6 +99,9 @@
     <Compile Include="Utilities\FileUtil.cs" />
     <Compile Include="JiraLib\JHelper.cs" />
     <Compile Include="JiraLib\JiraRepo.cs" />
+    <Compile Include="JiraLib\JIssue.cs" />
+    <Compile Include="JiraLib\JIssueChangeLog.cs" />
+    <Compile Include="JiraLib\JIssueChangeLogItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

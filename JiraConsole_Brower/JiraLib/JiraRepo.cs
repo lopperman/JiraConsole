@@ -92,7 +92,6 @@ namespace JConsole
 
 
         
-        
         public async Task<List<IssueStatus>> GetIssueTypeStatusesAsync(string projKey, string issueType, CancellationToken token = default(CancellationToken))
         {
 
@@ -116,6 +115,34 @@ namespace JConsole
             return ret;
         }
 
+        public List<Issue> GetSubTasksAsList(Issue issue)
+        {
+            return GetSubTasks(issue).GetAwaiter().GetResult().ToList();
+        }
+
+        public async Task<List<Issue>> GetSubTasks(Issue issue, CancellationToken token = default(CancellationToken))
+        {
+            List<Issue> result = new List<Issue>();
+
+            int incr = 0;
+            int total = 0;
+
+
+            do
+            {
+
+                IPagedQueryResult<Issue> response = await issue.GetSubTasksAsync(10, incr, token).ConfigureAwait(false);
+
+                total = response.TotalItems;
+
+                incr += response.Count();
+
+                result.AddRange(response);
+            }
+            while (incr < total);
+
+            return result;
+        }
 
         public async Task<List<IssueChangeLog>> GetChangeLogsAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
