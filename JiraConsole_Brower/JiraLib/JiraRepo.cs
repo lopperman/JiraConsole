@@ -79,14 +79,7 @@ namespace JConsole
         public List<IssueStatus> GetIssueTypeStatuses(string projKey, string issueType)
         {
 
-            //var resourceUrl = String.Format("rest/api/3/project/{0}/statuses", projKey);
-            //var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
-            //IRestRequest req = new RestRequest(resourceUrl, Method.GET);
-            //JToken resp = _jira.RestClient.ExecuteRequestAsync(req).GetAwaiter().GetResult();
 
-
-
-            //return null;
             return GetIssueTypeStatusesAsync(projKey, issueType).GetAwaiter().GetResult().ToList();
         }
 

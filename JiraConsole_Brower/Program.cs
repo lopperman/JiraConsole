@@ -247,147 +247,99 @@ namespace JiraConsole_Brower
         private static void Sandbox()
         {
 
+
+
+
             //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived)";
-            string jql = "key in (BAM-1238, BAM-2170, POS-426, BAM-2154)";
-            var issues = _jiraRepo.GetIssues(jql, true, "Feature Team Choices","Components","ParentIssueKey");
+            //string jql = "key in (BAM-1238, BAM-2170, POS-426, BAM-2154)";
+            string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived, Bug_Archive) AND statusCategoryChangedDate >= 2020-06-01 AND (labels is EMPTY OR labels not in (JM, JM-Work, JMPOS-Work, JM_Work, jm-work, Metrics-Ignore)) and (component != Infrastructure OR component is EMPTY)";
+            var issues = _jiraRepo.GetIssues(jql);
 
             List<JIssue> jissues = new List<JIssue>();
 
+
             foreach (var issue in issues)
             {
+                WriteLine(string.Format("getting changelogs for {0}", issue.Key.Value));
                 JIssue newIssue = new JIssue(issue);
                 newIssue.AddChangeLogs(_jiraRepo.GetIssueChangeLogs(issue));
 
-                var subTasks = _jiraRepo.GetSubTasksAsList(issue);
-                if (subTasks != null && subTasks.Count() > 0)
-                {
-                    foreach (var st in subTasks)
-                    {
-                        var subTaskIssue = new JIssue(st);
-                        subTaskIssue.AddChangeLogs(_jiraRepo.GetIssueChangeLogs(st));
-                        newIssue.AddSubTask(st);
-                    }
-                }
                 jissues.Add(newIssue);
             }
 
+            List<string> saveToFile = new List<string>();
 
+            StreamWriter qaWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_QAFILURE.txt", false);
+            StreamWriter cycleTimeWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_CYCLETIME.txt", false);
+            StreamWriter cycleTimeVelocity = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_VELOCITY.txt", false);
 
+            jissues = jissues.OrderBy(x => x.Key).ToList();
 
-
-            SortedDictionary<string, List<IssueChangeLog>> list = new SortedDictionary<string, List<IssueChangeLog>>();
-
-            int counter = 0;
-
-            SortedList<string, int> changeLogsOver100 = new SortedList<string, int>();
-
-            foreach (var issue in issues)
+            string lastKey = string.Empty;
+            foreach (var iss in jissues)
             {
-                counter += 1;
-                WriteLine(string.Format("{0} ({1:0000}/{2:0000}) - getting change logs", issue.Key.Value, counter, issues.Count));
-                var cLogs = _jiraRepo.GetIssueChangeLogs(issue);
-                if (cLogs != null && cLogs.Count > 0)
+
+                //only righgt if done or has qa failures or is bug
+
+                if (!lastKey.Equals(iss.Key))
                 {
-                    list.Add(issue.Key.Value, cLogs);
-                    WriteLine(string.Format("{0} ({1:0000}/{2:0000}) - {3} changeLogs", issue.Key.Value, counter, issues.Count,cLogs.Count));
-                    if (cLogs.Count > 100)
+                    lastKey = iss.Key;
+                    saveToFile.Add("");
+                    saveToFile.Add(string.Format("****** ISSUE: {0} -- status: {1}", iss.Key, iss.StatusName));
+                    saveToFile.Add(iss.CycleTimeSummary);
+
+                    foreach (var s in iss.FailedQASummary)
                     {
-                        changeLogsOver100.Add(issue.Key.Value, cLogs.Count);
+                        saveToFile.Add(s);
+                    }
+
+                    DateTime? devDoneDate = iss.GetDevDoneDate();
+                    if (devDoneDate.HasValue && devDoneDate.Value.Date > new DateTime(2020,6,1))
+                    {
+                        cycleTimeVelocity.WriteLine(string.Format("{0},{1},{2}", iss.Key,iss.IssueType, devDoneDate.Value.ToShortDateString()));
+                    }
+
+                    if (iss.FailedQASummary.Count > 0)
+                    {
+                        foreach (var s in iss.FailedQASummary)
+                        {
+                            qaWriter.WriteLine(s);
+                        }
+                    }
+                    string ct = iss.CycleTimeSummary;
+                    if (!string.IsNullOrWhiteSpace(ct) && ct.ToLower() != "n/a")
+                    {
+                        cycleTimeWriter.WriteLine(ct);
                     }
                 }
-                else
+
+                foreach (var cl in iss.GetStateChanges())
                 {
-                    list.Add(issue.Key.Value, null);
+                    saveToFile.Add(string.Format("{0}:\t{1}", iss.Key, cl));
                 }
             }
 
-            //var info = _jiraRepo.GetIssueTypeStatuses("POS", "Story");
+            string filename = "/Users/paulbrower/METRICS_OCT2020.txt";
 
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
 
+            StreamWriter writer = new StreamWriter(filename,false);
 
-            //string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
-            //string jql = "key = POS-973";
-            //var issues = _jiraRepo.GetIssues(jql, false, "Reporter");
+            for (int i = 0; i < saveToFile.Count; i ++)
+            {
+                writer.WriteLine(saveToFile[i]);
+            }
 
+            writer.Close();
+            qaWriter.Close();
+            cycleTimeWriter.Close();
+            cycleTimeVelocity.Close();
 
+            string checksaveToFile = "";
 
-
-
-            //var issueTypes = _jiraRepo.GetJira.IssueTypes.GetIssueTypesAsync().Result.ToList();
-
-            //var issue973 = _jiraRepo.GetIssue("POS-973");
-
-            //List<CustomFieldValue> customFields = issue973.CustomFields.ToList();
-
-            return;
-            //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
-            //options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
-            //options.FetchBasicFields = true;
-
-
-            ////            var issue = _jira.Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
-
-            //System.Threading.Tasks.Task<Project> proj = _jira.Projects.GetProjectAsync(config.jiraProjectKey);
-
-            //Project p = proj.GetAwaiter().GetResult();
-            //consoleLines.AddConsoleLine(string.Format("Project Name: {0}", p.Name));
-            //consoleLines.AddConsoleLine("");
-
-
-            //IEnumerable<IssueType> issueTypes = p.GetIssueTypesAsync().GetAwaiter().GetResult();
-            //consoleLines.AddConsoleLine("** Issue Types **");
-            //foreach (var it in issueTypes)
-            //{
-                
-            //    consoleLines.AddConsoleLine(String.Format("Id: {2}, Name: {0}, Desc: {1}",it.Name,it.Description,it.Id));
-            //}
-
-            var repo = new JConsole.JiraRepo(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken);
-
-//            Project x = repo.GetProject("POS");
-
-            //var posIssue = repo.GetIssueAsync("POS-392").GetAwaiter().GetResult();
-            //var bamIssue = repo.GetIssueAsync("BAM-2802").GetAwaiter().GetResult();
-
-            //consoleLines.WriteQueuedLines();
-
-            //string jql = "project in (BAM,POS) AND issueType in (Bug,Story) AND updatedDate >= 2020-06-01 AND status not in (Backlog)";
-            //string jql = "key = POS-426";
-
-            //var issues = repo.GetIssues(jql);
-
-            //var data = new JiraData(jql);
-            //data.JiraIssues.AddRange(issues);
-            //int counter = 0;
-            //int totalIssues = data.JiraIssues.Count;
-            //foreach (var iss in data.JiraIssues)
-            //{
-            //    counter += 1;
-            //    var logs = repo.GetIssueChangeLogs(iss);
-            //    data.AddIssueChangeLogs(iss.Key.Value, logs);
-
-            //    consoleLines.AddConsoleLine(string.Format("{3} changeLogs for {0} ({1} / {2}", iss.Key.Value, counter, totalIssues,logs.Count));
-
-            //    if (counter % 10 == 0)
-            //    {
-            //        consoleLines.WriteQueuedLines();
-            //    }
-
-            //}
-
-            //if (consoleLines.HasQueuedLines)
-            //{
-            //    consoleLines.WriteQueuedLines();
-            //}
-
-            //WriteLine("Saving JiraData to JSON file");
-            //FileUtil.SaveToJSON(data,"/users/paulbrower/JiraData.json");
-
-
-            var whoKnows = repo.GetIssueChangeLogs("POS-426");
-            
-
-            
         }
 
 

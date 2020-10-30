@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using JConsole.JiraLib;
 using Newtonsoft.Json;
 
 namespace JConsole.Utilities
@@ -10,7 +12,7 @@ namespace JConsole.Utilities
         {
         }
 
-        public static void SaveToJSON(JiraData obj, string path)
+        public static void SaveToJSON(List<JIssue> list, string path)
         {
             JsonSerializerSettings settings = new JsonSerializerSettings();
             settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -22,7 +24,7 @@ namespace JConsole.Utilities
                     File.Delete(path);
                 }
 
-                string data = JsonConvert.SerializeObject(obj,Formatting.None,settings);
+                string data = JsonConvert.SerializeObject(list,Formatting.None,settings);
 
                 using (StreamWriter writer = new StreamWriter(path, false))
                 {
@@ -37,12 +39,11 @@ namespace JConsole.Utilities
         }
 
         [Obsolete("Need to figure out how to deserialize Atlassian.Jira.Issue",true)]
-        public static JiraData LoadFromJSON(string path)
+        public static List<JIssue> LoadFromJSON(string path)
         {
-            JiraData obj = null;
+            List<JIssue> list = null;
 
             JsonSerializerSettings settings = new JsonSerializerSettings();
-            //settings.ConstructorHandling = 
 
             try
             {
@@ -52,14 +53,14 @@ namespace JConsole.Utilities
                     data = reader.ReadToEnd();
                 }
 
-                obj = JsonConvert.DeserializeObject<JiraData>(data,settings);
+                list = JsonConvert.DeserializeObject<List<JIssue>>(data,settings);
             }
             catch (Exception ex)
             {
                 throw ex;
             }
 
-            return obj;
+            return list;
         }
     }
 }
