@@ -1,19 +1,12 @@
 ﻿using System;
-using Atlassian.Jira;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.IO;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using System.Text.RegularExpressions;
-using JiraConsole_Brower.ConsoleHelpers;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
+using Atlassian.Jira;
 using JConsole;
-using JConsole.Utilities;
-using Terminal.Gui;
 using JConsole.JiraLib;
+using JiraConsole_Brower.ConsoleHelpers;
 
 namespace JiraConsole_Brower
 {
@@ -34,6 +27,9 @@ namespace JiraConsole_Brower
 
 
             _args = args;
+
+            //config = ConfigHelper.BuildConfig(args);
+            //_initialized = true;
 
             bool showMenu = true;
 
@@ -138,34 +134,34 @@ namespace JiraConsole_Brower
             consoleLines.WriteQueuedLines(true);
 
             var resp = Console.ReadKey();
-            if (resp.Key == ConsoleKey.S)
-            {
-                WriteLine("");
-                WriteLine("Enter Jira Card Key(s) separated by a space (e.g. POS-123 POS-234), or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
-                var keys = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(keys))
-                {
-                    return true;
-                }
-                if (keys.ToUpper() == "E")
-                {
-                    return false;
-                }
-                //if (keys.ToUpper() == "S")
-                //{
-                    string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                    for (int i = 0; i < arr.Length; i++)
-                    {
-                        AnalyzeOneIssue(arr[i]);
-                    }
-                //}
+            //if (resp.Key == ConsoleKey.S)
+            //{
+            //    WriteLine("");
+            //    WriteLine("Enter Jira Card Key(s) separated by a space (e.g. POS-123 POS-234), or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+            //    var keys = Console.ReadLine();
+            //    if (string.IsNullOrWhiteSpace(keys))
+            //    {
+            //        return true;
+            //    }
+            //    if (keys.ToUpper() == "E")
+            //    {
+            //        return false;
+            //    }
+            //    //if (keys.ToUpper() == "S")
+            //    //{
+            //        string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            //        for (int i = 0; i < arr.Length; i++)
+            //        {
+            //            AnalyzeOneIssue(arr[i]);
+            //        }
+            //    //}
 
-                WriteLine("");
-                WriteLine("Press any key to continue.");
-                Console.ReadKey();
-                return true;
-            }
-            else if (resp.Key == ConsoleKey.M)
+            //    WriteLine("");
+            //    WriteLine("Press any key to continue.");
+            //    Console.ReadKey();
+            //    return true;
+            //}
+             if (resp.Key == ConsoleKey.M)
             {
                 WriteLine("");
                 WriteLine("Enter Prefix, then Jira Card Key(s) separated by a space (e.g. POS 123 234), or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
@@ -195,64 +191,73 @@ namespace JiraConsole_Brower
                 Console.ReadKey();
                 return true;
             }
-            else if (resp.Key == ConsoleKey.F)
+            //else if (resp.Key == ConsoleKey.F)
+            //{
+            //    WriteLine("");
+            //    WriteLine("Enter filename with one story per line or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+            //    var keys = Console.ReadLine();
+            //    if (string.IsNullOrWhiteSpace(keys))
+            //    {
+            //        return true;
+            //    }
+            //    if (keys.ToUpper() == "E")
+            //    {
+            //        return false;
+            //    }
+            //    string inputFile = keys;
+
+            //    WriteLine("");
+            //    WriteLine("Enter filename to write output or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+            //    keys = Console.ReadLine();
+            //    if (string.IsNullOrWhiteSpace(keys))
+            //    {
+            //        return true;
+            //    }
+            //    if (keys.ToUpper() == "E")
+            //    {
+            //        return false;
+            //    }
+            //    string outputFile = keys;
+
+            //    AnalyzeAndWriteOutput(inputFile, outputFile);
+
+            //    WriteLine("");
+            //    WriteLine("Press any key to continue.");
+            //    Console.ReadKey();
+            //    return true;
+
+            //}
+            else if (resp.Key == ConsoleKey.J)
             {
                 WriteLine("");
-                WriteLine("Enter filename with one story per line or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+                WriteLine("Enter or paste JQL then press enter to continue.");
+                var jql = Console.ReadLine();
+                WriteLine("");
+                WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n\r\n{0}", jql));
                 var keys = Console.ReadLine();
                 if (string.IsNullOrWhiteSpace(keys))
                 {
                     return true;
                 }
-                if (keys.ToUpper() == "E")
+                if (keys.ToUpper() == "Y")
                 {
-                    return false;
+                    Sandbox(jql);
+                    WriteLine("");
+                    WriteLine("Press any key to continue.");
+                    Console.ReadKey();
                 }
-                string inputFile = keys;
-
-                WriteLine("");
-                WriteLine("Enter filename to write output or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
-                keys = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(keys))
-                {
-                    return true;
-                }
-                if (keys.ToUpper() == "E")
-                {
-                    return false;
-                }
-                string outputFile = keys;
-
-                AnalyzeAndWriteOutput(inputFile, outputFile);
-
-                WriteLine("");
-                WriteLine("Press any key to continue.");
-                Console.ReadKey();
-                return true;
-
-            }
-            else if (resp.Key == ConsoleKey.X)
-            {
-                Sandbox();
-
-                WriteLine("");
-                WriteLine("Press any key to continue.");
-                Console.ReadKey();
                 return true;
 
             }
             return false;
         }
 
-        private static void Sandbox()
+        private static void Sandbox(string jql)
         {
-
-
-
 
             //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived)";
             //string jql = "key in (BAM-1238, BAM-2170, POS-426, BAM-2154)";
-            string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived, Bug_Archive) AND statusCategoryChangedDate >= 2020-06-01 AND (labels is EMPTY OR labels not in (JM, JM-Work, JMPOS-Work, JM_Work, jm-work, Metrics-Ignore)) and (component != Infrastructure OR component is EMPTY)";
+            //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived, Bug_Archive) AND statusCategoryChangedDate >= 2020-06-01 AND (labels is EMPTY OR labels not in (JM, JM-Work, JMPOS-Work, JM_Work, jm-work, Metrics-Ignore)) and (component != Infrastructure OR component is EMPTY)";
             var issues = _jiraRepo.GetIssues(jql);
 
             List<JIssue> jissues = new List<JIssue>();
@@ -389,10 +394,10 @@ namespace JiraConsole_Brower
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
             consoleLines.AddConsoleLine("----------");
-            consoleLines.AddConsoleLine("(S)how Change History for Card");
-            consoleLines.AddConsoleLine("(M)Show Change History for Multiple Cards");
-            consoleLines.AddConsoleLine("(F)Enter file path that contains 1 card per line, and file path for output");
-            consoleLines.AddConsoleLine("(X) Run Current Sandbox");
+            //consoleLines.AddConsoleLine("(S)how Change History for Card");
+            consoleLines.AddConsoleLine("(M)Show Change History for 1 or more Cards");
+            //consoleLines.AddConsoleLine("(F)Enter file path that contains 1 card per line, and file path for output");
+            consoleLines.AddConsoleLine("(J) Create extract files for all cards from JQL");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
@@ -450,11 +455,11 @@ namespace JiraConsole_Brower
         {
             consoleLines.AddConsoleLine("This application can be initialized with");
             consoleLines.AddConsoleLine("1. path to config file with arguments");
-            consoleLines.AddConsoleLine("OR");
-            consoleLines.AddConsoleLine("2. the following arguments:");
-            consoleLines.AddConsoleLine("   [Jira UserName] [Jira API Token] [Jira Base URL] [Jira Project Key] [OPTIONAL Jira Card Prefix]");
+            //consoleLines.AddConsoleLine("OR");
+            //consoleLines.AddConsoleLine("2. the following arguments:");
+            //consoleLines.AddConsoleLine("   [Jira UserName] [Jira API Token] [Jira Base URL] [Jira Project Key] [OPTIONAL Jira Card Prefix]");
             consoleLines.AddConsoleLine("");
-            consoleLines.AddConsoleLine("For Example:  JiraConsole_Brower \"john.doe@atlassian.net\" \"JO5qzY7UfH8wxfi4ru4A3G4C\" \"https://company.atlasssian.net\" \"PRJ\"");
+            consoleLines.AddConsoleLine("For Example:  john.doe@wwt.com SECRETAPIKEY https://client.atlassian.net");
             consoleLines.AddConsoleLine("Please initialize application now per the above example:");
            
         }
@@ -493,23 +498,6 @@ namespace JiraConsole_Brower
             Console.ForegroundColor = defaultForeground;
             Console.BackgroundColor = defaultBackground;
         }
-
-        //public static void xMain(string[] args)
-        //{
-        //    if (args != null && args.Length == 5)
-        //    {
-        //        Main(args[0], args[1], args[2], args[3], args[4]);
-        //    }
-        //    else if (args != null && args.Length == 6)
-        //    {
-        //        AnalyzeOneIssue(args[0], args[1], args[2], args[3], args[4], args[5]);
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Incorrect Arguments");
-        //        Console.WriteLine("Good-bye");
-        //    }
-        //}
 
         public static void AnalyzeIssues(string prefix, string cardNumbers)
         {

@@ -7,12 +7,21 @@ namespace JiraConsole_Brower.ConsoleHelpers
     {
         internal static JiraConfiguration BuildConfig(string[] args)
         {
+            if (args.Length == 1)
+            {
+                return LoadConfigFile(args[0]);
+            }
+
             JiraConfiguration config = null;
 
 
             if (args.Length == 1)
             {
                 config = LoadConfigFile(args[0]);
+            }
+            else if (args.Length == 3)
+            {
+                config = new JiraConfiguration(args[0], args[1], args[2]);
             }
             else if (args.Length == 4)
             {
@@ -76,6 +85,13 @@ namespace JiraConsole_Brower.ConsoleHelpers
             this.jiraBaseUrl = jiraBaseUrl;
             this.jiraProjectKey = jiraProjectKey;
             this.jiraCardPrefix = string.Empty;
+        }
+
+        public JiraConfiguration(string jiraUserName, string jiraAPIToken, string jiraBaseUrl)
+        {
+            this.jiraUserName = jiraUserName;
+            this.jiraAPIToken = jiraAPIToken;
+            this.jiraBaseUrl = jiraBaseUrl;
         }
 
         public bool IsValid { get; set; }
