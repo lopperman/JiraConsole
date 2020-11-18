@@ -61,11 +61,10 @@ namespace JiraCon
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
             consoleLines.AddConsoleLine("----------");
-            //consoleLines.AddConsoleLine("(S)how Change History for Card");
-            consoleLines.AddConsoleLine("(M)Show Change History for 1 or more Cards");
-            //consoleLines.AddConsoleLine("(F)Enter file path that contains 1 card per line, and file path for output");
+            consoleLines.AddConsoleLine("(M) Show Change History for 1 or more Cards");
             consoleLines.AddConsoleLine("(J) Create extract files for all cards from JQL");
             consoleLines.AddConsoleLine("");
+            consoleLines.AddConsoleLine("(K) Re-create config file.");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
 

@@ -18,6 +18,7 @@ namespace JiraCon
 
         public JiraRepo(string server, string userName, string password)
         {
+
             JiraRestClientSettings settings = new JiraRestClientSettings();
             settings.EnableUserPrivacyMode = true;
             
