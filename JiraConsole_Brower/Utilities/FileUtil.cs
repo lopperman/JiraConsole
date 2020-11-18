@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using JConsole.JiraLib;
 using Newtonsoft.Json;
 
-namespace JConsole.Utilities
+namespace JiraCon
 {
     public class FileUtil
     {

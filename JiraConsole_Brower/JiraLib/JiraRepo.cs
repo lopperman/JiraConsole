@@ -9,7 +9,7 @@ using RestSharp;
 using Newtonsoft.Json.Linq;
 using System.Text;
 
-namespace JConsole
+namespace JiraCon
 {
     public class JiraRepo: IJiraRepo
     {

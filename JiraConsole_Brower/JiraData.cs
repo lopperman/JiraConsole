@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Atlassian.Jira;
 
-namespace JConsole
+namespace JiraCon
 {
     public class JiraData
     { 

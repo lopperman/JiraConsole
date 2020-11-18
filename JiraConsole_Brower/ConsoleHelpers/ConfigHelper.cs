@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace JiraConsole_Brower.ConsoleHelpers
+namespace JiraCon
 {
     public static class ConfigHelper
     {

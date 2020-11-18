@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace JConsole.JHelpers
+namespace JiraCon
 {
     public static class JHelper
     {

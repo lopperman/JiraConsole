@@ -1,9 +1,8 @@
 ﻿using System;
 using Atlassian.Jira;
-using JConsole.JHelpers;
 using Newtonsoft.Json;
 
-namespace JConsole.JiraLib
+namespace JiraCon
 {
     public class JIssueChangeLogItem
     {
