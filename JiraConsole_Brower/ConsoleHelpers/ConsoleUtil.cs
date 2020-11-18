@@ -5,6 +5,8 @@ namespace JiraCon
 
     public static class ConsoleUtil
     {
+        static ConsoleLines consoleLines = new ConsoleLines();
+
         private static ConsoleColor defaultForeground;
         private static ConsoleColor defaultBackground;
 
@@ -24,6 +26,20 @@ namespace JiraCon
             }
         }
 
+        public static ConsoleLines Lines
+        {
+            get
+            {
+                return consoleLines;
+            }
+        }
+
+        public static void ResetConsoleColors()
+        {
+            Console.BackgroundColor = defaultBackground;
+            Console.ForegroundColor = defaultForeground;
+        }
+
         public static void InitializeConsole(ConsoleColor defForeground, ConsoleColor defBackground)
         {
             defaultForeground = defForeground;
@@ -40,7 +56,7 @@ namespace JiraCon
             Console.BackgroundColor = defaultBackground;
         }
 
-        public static void BuildInitializedMenu(ConsoleLines consoleLines)
+        public static void BuildInitializedMenu()
         {
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
@@ -52,6 +68,17 @@ namespace JiraCon
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
+
+        public static void BuildNotInitializedQueue()
+        {
+            consoleLines.AddConsoleLine("This application can be initialized with");
+            consoleLines.AddConsoleLine("1. path to config file with arguments");
+            consoleLines.AddConsoleLine("");
+            consoleLines.AddConsoleLine("For Example:  john.doe@wwt.com SECRETAPIKEY https://client.atlassian.net");
+            consoleLines.AddConsoleLine("Please initialize application now per the above example:");
+
+        }
+
 
 
         public static void WriteLine(string text)
@@ -73,8 +100,36 @@ namespace JiraCon
             Console.ForegroundColor = foregroundColor;
             Console.BackgroundColor = backgroundColor;
             Console.WriteLine(text);
-            ConsoleUtil.SetDefaultConsoleColors();
+            SetDefaultConsoleColors();
 
+        }
+
+        public static void WriteAppend(string text)
+        {
+            WriteAppend(text, false);    
+        }
+
+        public static void WriteAppend(string text, bool endOfLine)
+        {
+            WriteAppend(text, defaultForeground, defaultBackground,endOfLine);
+        }
+
+
+        public static void WriteAppend(string text, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
+        {
+            WriteAppend(text, foregroundColor, backgroundColor, false);
+        }
+
+        public static void WriteAppend(string text, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool endOfLine)
+        {
+            Console.ForegroundColor = foregroundColor;
+            Console.BackgroundColor = backgroundColor;
+            Console.Write(text);
+            if (endOfLine)
+            {
+                Console.WriteLine();
+            }
+            SetDefaultConsoleColors();
         }
 
     }

@@ -11,7 +11,6 @@ namespace JiraCon
     {
         private static bool _initialized = false;
         static JiraConfiguration config = null;
-        static ConsoleLines consoleLines = new ConsoleLines();
         static JiraRestClientSettings _settings = null;
         private static string[] _args = null;
 
@@ -29,7 +28,7 @@ namespace JiraCon
             {
                 showMenu = MainMenu();
             }
-            consoleLines.ByeBye();
+            ConsoleUtil.Lines.ByeBye();
             Environment.Exit(0);
         }
 
@@ -45,14 +44,14 @@ namespace JiraCon
                 }
                 if (config == null)
                 {
-                    BuildNotInitializedQueue();
-                    consoleLines.WriteQueuedLines(true);
+                    ConsoleUtil.BuildNotInitializedQueue();
+                    ConsoleUtil.Lines.WriteQueuedLines(true);
                     string vs = Console.ReadLine();
                     if (string.IsNullOrWhiteSpace(vs)) vs = string.Empty;
                     string[] arr = vs.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     config = ConfigHelper.BuildConfig(arr);
 
-                    consoleLines.configInfo = string.Format("User: {0}, Project Key: {1}", config.jiraUserName, config.jiraProjectKey);
+                    ConsoleUtil.Lines.configInfo = string.Format("User: {0}", config.jiraUserName);
 
 
                     if (config != null)
@@ -85,6 +84,9 @@ namespace JiraCon
                 {
                     if (JiraUtil.CreateRestClient(config))
                     {
+                        ConsoleUtil.WriteLine("Successfully connected to Jira as " + config.jiraUserName);
+                        ConsoleUtil.Lines.configInfo = string.Format("User: {0}", config.jiraUserName);
+
                         _initialized = true;
                         return _initialized;
                     }
@@ -115,15 +117,15 @@ namespace JiraCon
 
         private static bool InitializedMenu()
         {
-            ConsoleUtil.BuildInitializedMenu(consoleLines);
-            consoleLines.WriteQueuedLines(true);
+            ConsoleUtil.BuildInitializedMenu();
+            ConsoleUtil.Lines.WriteQueuedLines(true);
 
             var resp = Console.ReadKey();
             if (resp.Key == ConsoleKey.M)
             {
                 ConsoleUtil.WriteLine("");
-                ConsoleUtil.WriteLine("Enter Prefix, then Jira Card Key(s) separated by a space (e.g. POS 123 234), or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
-                var keys = Console.ReadLine();
+                ConsoleUtil.WriteLine("Enter 1 or more card keys separated by a space (e.g. POS-123 POS-456 BAM-789), or E to exit.", ConsoleColor.Black, ConsoleColor.White, false);
+                var keys = Console.ReadLine().ToUpper();
                 if (string.IsNullOrWhiteSpace(keys))
                 {
                     return true;
@@ -132,11 +134,21 @@ namespace JiraCon
                 {
                     return false;
                 }
-                    string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                    if (arr.Length >= 2)
+
+                string[] arr = keys.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                if (arr.Length >= 1)
+                {
+                    ConsoleUtil.WriteLine("Would you like to include changes to card description and comments? (enter Y to include)");
+                    resp = Console.ReadKey();
+                    if (resp.Key == ConsoleKey.Y)
                     {
-                        string prefix = arr[0];
-                    AnalyzeIssues(arr[0], keys);
+                        AnalyzeIssues(keys,true);
+                    }
+                    else
+                    {
+                        AnalyzeIssues(keys,false);
+                    }
+
                 }
 
                 ConsoleUtil.WriteLine("");
@@ -276,212 +288,143 @@ namespace JiraCon
 
         }
 
-
-        //private static bool CreateRestClient()
-        //{
-        //    bool ret = false;
-        //    try
-        //    {
-        //        _settings = new JiraRestClientSettings();
-        //        _settings.EnableUserPrivacyMode = true;
-
-        //        ConsoleUtil.WriteLine(string.Format("connecting to {0}@{1} ...", config.jiraUserName, config.jiraBaseUrl));
-        //        _jiraRepo = new JiraRepo(config.jiraBaseUrl, config.jiraUserName, config.jiraAPIToken);
-
-        //        if (_jiraRepo != null)
-        //        {
-        //            var test = _jiraRepo.GetJira().IssueTypes.GetIssueTypesAsync().Result.ToList();
-        //            if (test != null && test.Count > 0)
-        //            {
-        //                ret = true;
-        //            }
-        //        }
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("");
-        //        Console.Beep();
-        //        Console.Beep();
-        //        Console.WriteLine("Sorry, there seems to be a problem connecting to Jira with the arguments you provided. Error: {0}, {1}\r\n\r\n{2}", ex.Message, ex.Source, ex.StackTrace);
-        //        return false;
-        //    }
-
-        //    if (ret)
-        //    {
-        //        ConsoleUtil.WriteLine("Successfully connected to Jira as " + config.jiraUserName);
-        //        consoleLines.configInfo = string.Format("User: {0}, Project Key: {1}", config.jiraUserName, config.jiraProjectKey);
-
-        //    }
-
-        //    return ret;
-        //}
-
-        private static void BuildNotInitializedQueue()
-        {
-            consoleLines.AddConsoleLine("This application can be initialized with");
-            consoleLines.AddConsoleLine("1. path to config file with arguments");
-            //consoleLines.AddConsoleLine("OR");
-            //consoleLines.AddConsoleLine("2. the following arguments:");
-            //consoleLines.AddConsoleLine("   [Jira UserName] [Jira API Token] [Jira Base URL] [Jira Project Key] [OPTIONAL Jira Card Prefix]");
-            consoleLines.AddConsoleLine("");
-            consoleLines.AddConsoleLine("For Example:  john.doe@wwt.com SECRETAPIKEY https://client.atlassian.net");
-            consoleLines.AddConsoleLine("Please initialize application now per the above example:");
-           
-        }
-
-        //private static void WriteLine(string text)
-        //{
-        //    WriteLine(text, false);
-        //}
-
-        //private static void WriteLine(string text, bool clearScreen)
-        //{
-        //    WriteLine(text, ConsoleUtil.DefaultConsoleForeground, ConsoleUtil.DefaultConsoleBackground, clearScreen);
-        //}
-
-        //private static void WriteLine(string text, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool clearScreen)
-        //{
-        //    if (clearScreen)
-        //    {
-        //        Console.Clear();
-        //    }
-        //    Console.ForegroundColor = foregroundColor;
-        //    Console.BackgroundColor = backgroundColor;
-        //    Console.WriteLine(text);
-        //    ConsoleUtil.SetDefaultConsoleColors();    
-
-        //}
-
-
-        public static void AnalyzeIssues(string prefix, string cardNumbers)
+        public static void AnalyzeIssues(string cardNumbers, bool includeDescAndComments)
         {
             string[] arr = cardNumbers.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 1; i < arr.Length; i++)
+            for (int i = 0; i < arr.Length; i++)
             {
-                AnalyzeOneIssue(string.Format("{0}-{1}",prefix,arr[i]));
+                AnalyzeOneIssue(arr[i],includeDescAndComments);
             }
         }
 
-        public static string AnalyzeIssue(string key)
-        {
-            //var settings = new JiraRestClientSettings();
-            //settings.EnableUserPrivacyMode = false;
+        //public static string AnalyzeIssue(string key)
+        //{
+        //    //var settings = new JiraRestClientSettings();
+        //    //settings.EnableUserPrivacyMode = false;
 
-            ConsoleUtil.WriteLine("");
-            ConsoleUtil.WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
+        //    ConsoleUtil.WriteLine("");
+        //    ConsoleUtil.WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
 
-            StringBuilder sb = new StringBuilder();
+        //    StringBuilder sb = new StringBuilder();
 
-            IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
-            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
-            options.FetchBasicFields = true;
+        //    IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+        //    options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+        //    options.FetchBasicFields = true;
 
-            var issue = JiraUtil.JiraRepo.GetJira().Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
+        //    var issue = JiraUtil.JiraRepo.GetJira().Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
 
-            if (issue == null)
-            {
-                sb.AppendLine(string.Format("***** Jira Card: " + key + " NOT FOUND!", ConsoleColor.DarkBlue, ConsoleColor.White, false));
-                return sb.ToString();
-            }
+        //    if (issue == null)
+        //    {
+        //        sb.AppendLine(string.Format("***** Jira Card: " + key + " NOT FOUND!", ConsoleColor.DarkBlue, ConsoleColor.White, false));
+        //        return sb.ToString();
+        //    }
 
-            var labels = issue.Labels;
+        //    var labels = issue.Labels;
 
-            var backClr = Console.BackgroundColor;
-            var foreClr = Console.ForegroundColor;
+        //    var backClr = Console.BackgroundColor;
+        //    var foreClr = Console.ForegroundColor;
 
-            var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
+        //    var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
 
-            List<string> importantFields = new List<string>();
-            importantFields.Add("status");
-            importantFields.Add("feature team choices");
-            importantFields.Add("labels");
-            importantFields.Add("resolution");
+        //    List<string> importantFields = new List<string>();
+        //    importantFields.Add("status");
+        //    importantFields.Add("feature team choices");
+        //    importantFields.Add("labels");
+        //    importantFields.Add("resolution");
 
 
 
-            for (int i = 0; i < changeLogs.Count; i++)
-            {
-                IssueChangeLog changeLog = changeLogs[i];
+        //    for (int i = 0; i < changeLogs.Count; i++)
+        //    {
+        //        IssueChangeLog changeLog = changeLogs[i];
 
                 
 
-                foreach (IssueChangeLogItem cli in changeLog.Items)
-                {
-                    if (!importantFields.Contains(cli.FieldName.ToLower()))
-                    {
-                        continue;
-                    }
-                    else
-                    {
+        //        foreach (IssueChangeLogItem cli in changeLog.Items)
+        //        {
+        //            if (!importantFields.Contains(cli.FieldName.ToLower()))
+        //            {
+        //                continue;
+        //            }
+        //            else
+        //            {
 
 
-                        if (cli.FieldName.ToLower().StartsWith("status"))
-                        {
-                            sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
+        //                if (cli.FieldName.ToLower().StartsWith("status"))
+        //                {
+        //                    sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
 
-                            sb.AppendFormat("{0}", cli.ToValue);
-                            sb.AppendFormat(Environment.NewLine);
-                        }
-                        else if (cli.FieldName.ToLower().StartsWith("label"))
-                        {
-                            sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
+        //                    sb.AppendFormat("{0}", cli.ToValue);
+        //                    sb.AppendFormat(Environment.NewLine);
+        //                }
+        //                else if (cli.FieldName.ToLower().StartsWith("label"))
+        //                {
+        //                    sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
 
-                            sb.AppendFormat("{0}", cli.ToValue);
-                            sb.AppendFormat(Environment.NewLine);
-                        }
+        //                    sb.AppendFormat("{0}", cli.ToValue);
+        //                    sb.AppendFormat(Environment.NewLine);
+        //                }
 
-                        else
-                        {
-                            sb.AppendLine(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue));
+        //                else
+        //                {
+        //                    sb.AppendLine(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue));
 
-                        }
+        //                }
 
-                    }
-                }
-            }
-            sb.AppendLine(string.Format("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false));
+        //            }
+        //        }
+        //    }
+        //    sb.AppendLine(string.Format("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false));
 
-            return sb.ToString();
-        }
+        //    return sb.ToString();
+        //}
 
-        public static void AnalyzeOneIssue(string key)
+        public static void AnalyzeOneIssue(string key, bool includeDescAndComments)
         {
+
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
+            ConsoleUtil.SetDefaultConsoleColors();
 
             var issue = JiraUtil.JiraRepo.GetIssue(key);
 
             if (issue == null)
             {
                 ConsoleUtil.WriteLine("***** Jira Card: " + key + " NOT FOUND!", ConsoleColor.DarkBlue, ConsoleColor.White, false);
+                ConsoleUtil.SetDefaultConsoleColors();
                 return;
             }
 
-            var backClr = Console.BackgroundColor;
-            var foreClr = Console.ForegroundColor;
+
+            ConsoleUtil.WriteLine("***** loading change logs for {0}: " + key);
 
             var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
 
+            ConsoleUtil.WriteLine(string.Format("Found {0} change logs for {1}", changeLogs.Count, key));
+
             for (int i = 0; i < changeLogs.Count; i++)
             {
+                ConsoleUtil.SetDefaultConsoleColors();
+
                 IssueChangeLog changeLog = changeLogs[i];
+
 
                 foreach (IssueChangeLogItem cli in changeLog.Items)
                 {
-                    if (cli.FieldName.ToLower().StartsWith("desc"))
+                    if (cli.FieldName.ToLower().StartsWith("desc") || cli.FieldName.ToLower().StartsWith("comment"))
                     {
-                        continue;
-                    }
-                    else if (cli.FieldName.ToLower().StartsWith("comment"))
-                    {
-                        continue;
+                        if (includeDescAndComments)
+                        {
+                            ConsoleUtil.WriteAppend(string.Format("{0} - Changed On {1}, {2} field changed ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName), ConsoleUtil.DefaultConsoleForeground, ConsoleUtil.DefaultConsoleBackground, true);
+                            ConsoleUtil.WriteAppend(string.Format("\t{0} changed from ",cli.FieldName), true);
+                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.FromValue), ConsoleColor.DarkGreen, ConsoleUtil.DefaultConsoleBackground, true);
+                            ConsoleUtil.WriteAppend(string.Format("\t{0} changed to ", cli.FieldName), true);
+                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.ToValue), ConsoleColor.Green, ConsoleUtil.DefaultConsoleBackground, true);
+                        }
                     }
                     else
                     {
 
-                        Console.BackgroundColor = backClr;
-                        Console.ForegroundColor = foreClr;
 
                         if (cli.FieldName.ToLower().StartsWith("status"))
                         {
@@ -514,6 +457,8 @@ namespace JiraCon
                 }
             }
             ConsoleUtil.WriteLine("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false);
+
+            ConsoleUtil.SetDefaultConsoleColors();
         }
 
 

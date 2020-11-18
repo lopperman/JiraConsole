@@ -7,13 +7,12 @@ namespace JiraCon
     {
         internal static JiraConfiguration BuildConfig(string[] args)
         {
+            JiraConfiguration config = null;
+
             if (args.Length == 1)
             {
                 return LoadConfigFile(args[0]);
             }
-
-            JiraConfiguration config = null;
-
 
             if (args.Length == 1)
             {
@@ -22,14 +21,6 @@ namespace JiraCon
             else if (args.Length == 3)
             {
                 config = new JiraConfiguration(args[0], args[1], args[2]);
-            }
-            else if (args.Length == 4)
-            {
-                config = new JiraConfiguration(args[0], args[1], args[2], args[3]);
-            }
-            else if (args.Length == 5)
-            {
-                config = new JiraConfiguration(args[0], args[1], args[2], args[3], args[4]);
             }
 
             return config;
@@ -69,23 +60,6 @@ namespace JiraCon
 
     public class JiraConfiguration
     {
-        public JiraConfiguration(string jiraUserName, string jiraAPIToken, string jiraBaseUrl, string jiraProjectKey, string jiraCardPrefix)
-        {
-            this.jiraUserName = jiraUserName;
-            this.jiraAPIToken = jiraAPIToken;
-            this.jiraBaseUrl = jiraBaseUrl;
-            this.jiraProjectKey = jiraProjectKey;
-            this.jiraCardPrefix = jiraCardPrefix;
-        }
-
-        public JiraConfiguration(string jiraUserName, string jiraAPIToken, string jiraBaseUrl, string jiraProjectKey)
-        {
-            this.jiraUserName = jiraUserName;
-            this.jiraAPIToken = jiraAPIToken;
-            this.jiraBaseUrl = jiraBaseUrl;
-            this.jiraProjectKey = jiraProjectKey;
-            this.jiraCardPrefix = string.Empty;
-        }
 
         public JiraConfiguration(string jiraUserName, string jiraAPIToken, string jiraBaseUrl)
         {
@@ -98,8 +72,6 @@ namespace JiraCon
         public string jiraUserName { get; set; }
         public string jiraAPIToken { get; set; }
         public string jiraBaseUrl { get; set; }
-        public string jiraProjectKey { get; set; }
-        public string jiraCardPrefix { get; set; } //e.g. "POS-"
 
     }
 }

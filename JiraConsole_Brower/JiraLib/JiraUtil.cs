@@ -53,12 +53,6 @@ namespace JiraCon
                 return false;
             }
 
-            //if (ret)
-            //{
-            //    WriteLine("Successfully connected to Jira as " + config.jiraUserName);
-            //    consoleLines.configInfo = string.Format("User: {0}, Project Key: {1}", config.jiraUserName, config.jiraProjectKey);
-
-            //}
 
             return ret;
         }
