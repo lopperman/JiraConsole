@@ -14,7 +14,6 @@ namespace JiraCon
         static JiraConfiguration config = null;
         static JiraRestClientSettings _settings = null;
         private static string[] _args = null;
-        const string configFileName = "JiraConConfig.txt";
 
         public static void Main(string[] args)
         {
@@ -23,7 +22,7 @@ namespace JiraCon
 
             if (args == null || args.Length == 0)
             {
-                args = GetConfig();
+                args = ConfigHelper.GetConfig();
             }
 
             _args = args;
@@ -38,126 +37,101 @@ namespace JiraCon
         }
 
 
-        private static void KillConfig()
-        {
-            var personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "/Library/Application Support/JiraCon";
-            if (Directory.Exists(personalFolder))
-            {
-                string configFile = Path.Combine(personalFolder, configFileName);
-                if (File.Exists(configFile))
-                {
-                    File.Delete(configFile);
-                }
-            }
+        //private static void KillConfig()
+        //{
+        //    var personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "/Library/Application Support/JiraCon";
+        //    if (Directory.Exists(personalFolder))
+        //    {
+        //        string configFile = Path.Combine(personalFolder, configFileName);
+        //        if (File.Exists(configFile))
+        //        {
+        //            File.Delete(configFile);
+        //        }
+        //    }
 
-            ConsoleUtil.WriteLine("Config file has been deleted. Run program again to create new config file. Press any key to exit.",ConsoleColor.White,ConsoleColor.DarkMagenta,true);
-            Console.ReadKey();
-        }
+        //    ConsoleUtil.WriteLine("Config file has been deleted. Run program again to create new config file. Press any key to exit.",ConsoleColor.White,ConsoleColor.DarkMagenta,true);
+        //    Console.ReadKey();
+        //}
 
-        private static string[] GetConfig()
-        {
-            string[] ret = null;
+        //private static string[] GetConfig()
+        //{
+        //    string[] ret = null;
 
-            var personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "/Library/Application Support/JiraCon";
-            if (!Directory.Exists(personalFolder))
-            {
-                Directory.CreateDirectory(personalFolder);
-            }
-            string configFile = Path.Combine(personalFolder, configFileName);
+        //    var personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "/Library/Application Support/JiraCon";
+        //    if (!Directory.Exists(personalFolder))
+        //    {
+        //        Directory.CreateDirectory(personalFolder);
+        //    }
+        //    string configFile = Path.Combine(personalFolder, configFileName);
 
-            if (File.Exists(configFile))
-            {
-                //check to confirm file has 3 arguments
-                using (StreamReader reader = new StreamReader(configFile))
-                {
-                    var text = reader.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(text))
-                    {
-                        var arr = text.Split(' ');
-                        if (arr.Length == 3)
-                        {
-                            ret = arr;
-                        }
-                    }
-                }
-            }
+        //    if (File.Exists(configFile))
+        //    {
+        //        //check to confirm file has 3 arguments
+        //        using (StreamReader reader = new StreamReader(configFile))
+        //        {
+        //            var text = reader.ReadLine();
+        //            if (!string.IsNullOrWhiteSpace(text))
+        //            {
+        //                var arr = text.Split(' ');
+        //                if (arr.Length == 3)
+        //                {
+        //                    ret = arr;
+        //                }
+        //            }
+        //        }
+        //    }
 
-            if (ret == null)
-            {
-                string userName = "";
-                string apiToken = "";
-                string jiraBaseUrl = "";
+        //    if (ret == null)
+        //    {
+        //        string userName = "";
+        //        string apiToken = "";
+        //        string jiraBaseUrl = "";
 
-                userName = GetConsoleInput("Missing config -- please enter username (email address) for Jira login:");
-                apiToken = GetConsoleInput("Missing config -- please enter API token for Jira login:");
-                jiraBaseUrl = GetConsoleInput("Missing config -- please enter base url for Jira instance:");
+        //        userName = GetConsoleInput("Missing config -- please enter username (email address) for Jira login:");
+        //        apiToken = GetConsoleInput("Missing config -- please enter API token for Jira login:");
+        //        jiraBaseUrl = GetConsoleInput("Missing config -- please enter base url for Jira instance:");
 
-                bool validCredentials = false;
-                //test connection
-                try
-                {
-                    ConsoleUtil.WriteLine("testing Jira connection ...");
-                    var testConn = new JiraRepo(jiraBaseUrl, userName, apiToken);
+        //        bool validCredentials = false;
+        //        //test connection
+        //        try
+        //        {
+        //            ConsoleUtil.WriteLine("testing Jira connection ...");
+        //            var testConn = new JiraRepo(jiraBaseUrl, userName, apiToken);
 
-                    if (testConn != null)
-                    {
-                        var test = testConn.GetJira().IssueTypes.GetIssueTypesAsync().Result.ToList();
-                        if (test != null && test.Count > 0)
-                        {
-                            validCredentials = true;
-                            ConsoleUtil.WriteLine("testing Jira connection ... successful");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ConsoleUtil.WriteLine("testing Jira connection ... failed");
-                    ConsoleUtil.WriteLine(ex.Message);
-                }
+        //            if (testConn != null)
+        //            {
+        //                var test = testConn.GetJira().IssueTypes.GetIssueTypesAsync().Result.ToList();
+        //                if (test != null && test.Count > 0)
+        //                {
+        //                    validCredentials = true;
+        //                    ConsoleUtil.WriteLine("testing Jira connection ... successful");
+        //                }
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            ConsoleUtil.WriteLine("testing Jira connection ... failed");
+        //            ConsoleUtil.WriteLine(ex.Message);
+        //        }
 
-                if (!validCredentials)
-                {
-                    return GetConfig();
-                }
-                else
-                {
-                    using (StreamWriter writer = new StreamWriter(configFile))
-                    {
-                        writer.WriteLine(string.Format("{0} {1} {2}", userName, apiToken, jiraBaseUrl));
-                    }
-                    return GetConfig();
-                }
-            }
+        //        if (!validCredentials)
+        //        {
+        //            return GetConfig();
+        //        }
+        //        else
+        //        {
+        //            using (StreamWriter writer = new StreamWriter(configFile))
+        //            {
+        //                writer.WriteLine(string.Format("{0} {1} {2}", userName, apiToken, jiraBaseUrl));
+        //            }
+        //            return GetConfig();
+        //        }
+        //    }
 
-            return ret;
+        //    return ret;
 
-        }
+        //}
 
-        private static string GetConsoleInput(string message)
-        {
-            Console.WriteLine("...");
-            ConsoleUtil.WriteLine(message);
-            var ret = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(ret))
-            {
-                return GetConsoleInput(message);
-            }
-            ConsoleUtil.WriteLine("");
-            ConsoleUtil.WriteLine(string.Format("Enter 'Y' to Use '{0}', otherwise enter 'E' to exit or another key to enter new value", ret));
-            var key = Console.ReadKey();
-
-            if (key.Key == ConsoleKey.E)
-            {
-                Environment.Exit(0);
-            }
-            if (key.Key != ConsoleKey.Y)
-            {
-                return GetConsoleInput(message);
-            }
-
-            return ret;
-            
-        }
 
         private static bool MainMenu()
         {
@@ -284,18 +258,16 @@ namespace JiraCon
             }
             else if (resp.Key == ConsoleKey.J)
             {
+                
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
                 var jql = Console.ReadLine();
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n\r\n{0}", jql));
-                var keys = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(keys))
+                var keys = Console.ReadKey();
+                if (keys.Key == ConsoleKey.Y)
                 {
-                    return true;
-                }
-                if (keys.ToUpper() == "Y")
-                {
+//                    CreateExtractFiles(jql);
                     Sandbox(jql);
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
@@ -306,12 +278,162 @@ namespace JiraCon
             }
             else if (resp.Key == ConsoleKey.K)
             {
-                KillConfig();
+                ConfigHelper.KillConfig();
                 return false;
             }
             return false;
         }
 
+        private static void CreateExtractFiles(string jql)
+        {
+            try
+            {
+                Console.WriteLine("** Hey Paul, don't forget to include the filter options for each file type **");
+                Console.ReadLine();
+
+                DateTime now = DateTime.Now;
+                string fileNameSuffix = string.Format("_{0:0000}{1}{2:00}_{3}.txt", now.Year, now.ToString("MMM"), now.Day, now.ToString("hhmmss"));
+
+                string cycleTimeFile = String.Format("JiraCon_CycleTime_{0}", fileNameSuffix);
+                string qaFailFile = String.Format("JiraCon_QAFailure_{0}", fileNameSuffix);
+                string velocityFile = String.Format("JiraCon_Velocity_{0}", fileNameSuffix);
+                string changeHistoryFile = String.Format("JiraCon_ChangeHistory_{0}", fileNameSuffix);
+                string extractConfigFile = String.Format("JiraCon_ExtractConfig_{0}", fileNameSuffix);
+
+
+                ConsoleUtil.WriteLine(string.Format("getting issues from JQL:{0}",Environment.NewLine));
+                ConsoleUtil.WriteLine(string.Format("{0}", jql));
+                ConsoleUtil.WriteLine("");
+
+                var issues = JiraUtil.JiraRepo.GetIssues(jql);
+
+                ConsoleUtil.WriteLine(string.Format("Retrieved {0} issues", issues.Count()));
+
+                List<JIssue> jissues = new List<JIssue>();
+
+                foreach (var issue in issues)
+                {
+                    ConsoleUtil.WriteLine(string.Format("getting changelogs for {0}", issue.Key.Value));
+                    JIssue newIssue = new JIssue(issue);
+                    newIssue.AddChangeLogs(JiraUtil.JiraRepo.GetIssueChangeLogs(issue));
+
+                    jissues.Add(newIssue);
+                }
+
+                List<string> saveToFile = new List<string>();
+
+                StreamWriter qaWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_QAFILURE.txt", false);
+                StreamWriter cycleTimeWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_CYCLETIME.txt", false);
+                StreamWriter cycleTimeVelocity = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_VELOCITY.txt", false);
+
+                var extractFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "JiraCon");
+                if (!Directory.Exists(extractFolder))
+                {
+                    Directory.CreateDirectory(extractFolder);
+                }
+
+                CreateQAFailExtract(issues, Path.Combine(extractFolder, qaFailFile));
+                CreateCycleTimeExtract(issues, Path.Combine(extractFolder, qaFailFile));
+                CreateVBelocityExtract(issues, Path.Combine(extractFolder, qaFailFile));
+                CreateChangeLogExtract(issues, Path.Combine(extractFolder, qaFailFile));
+                CreateConfigExtract(issues, Path.Combine(extractFolder, qaFailFile),jql);
+
+
+            }
+            catch (Exception ex)
+            {
+                ConsoleUtil.WriteLine("*** An error has occurred ***", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine(ex.Message, ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine(ex.StackTrace, ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+            }
+        }
+
+        private static void CreateConfigExtract(List<Issue> issues, string file, string jql)
+        {
+            using (StreamWriter w = new StreamWriter(file))
+            {
+                w.WriteLine("***** JQL Used for Extract *****");
+                w.WriteLine("");
+                w.WriteLine(string.Format("{0}", jql));
+            }
+        }
+
+        private static void CreateChangeLogExtract(List<Issue> issues, string file)
+        {
+
+        }
+
+        private static void CreateVBelocityExtract(List<Issue> issues, string file)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void CreateCycleTimeExtract(List<Issue> issues, string file)
+        {
+            //issues = issues.OrderBy(x => x.Key).ToList();
+            //List<string> saveToFile = new List<string>();
+
+            //string lastKey = string.Empty;
+
+            //foreach (var iss in issues)
+            //{
+            //    if (!lastKey.Equals(iss.Key))
+            //    {
+            //        lastKey = iss.Key;
+            //        saveToFile.Add("");
+            //        saveToFile.Add(string.Format("****** ISSUE: {0} -- status: {1}", iss.Key, iss.StatusName));
+            //        saveToFile.Add(iss.CycleTimeSummary);
+
+            //        foreach (var s in iss.FailedQASummary)
+            //        {
+            //            saveToFile.Add(s);
+            //        }
+
+            //        DateTime? devDoneDate = iss.GetDevDoneDate();
+            //        if (devDoneDate.HasValue && devDoneDate.Value.Date > new DateTime(2020, 6, 1))
+            //        {
+            //            cycleTimeVelocity.WriteLine(string.Format("{0},{1},{2}", iss.Key, iss.IssueType, devDoneDate.Value.ToShortDateString()));
+            //        }
+
+            //        if (iss.FailedQASummary.Count > 0)
+            //        {
+            //            foreach (var s in iss.FailedQASummary)
+            //            {
+            //                qaWriter.WriteLine(s);
+            //            }
+            //        }
+            //        string ct = iss.CycleTimeSummary;
+            //        if (!string.IsNullOrWhiteSpace(ct) && ct.ToLower() != "n/a")
+            //        {
+            //            cycleTimeWriter.WriteLine(ct);
+            //        }
+            //    }
+
+            //    foreach (var cl in iss.GetStateChanges())
+            //    {
+            //        saveToFile.Add(string.Format("{0}:\t{1}", iss.Key, cl));
+            //    }
+            //}
+
+            //string filename = "/Users/paulbrower/METRICS_OCT2020.txt";
+
+            //if (File.Exists(filename))
+            //{
+            //    File.Delete(filename);
+            //}
+
+            //StreamWriter writer = new StreamWriter(filename, false);
+
+            //for (int i = 0; i < saveToFile.Count; i++)
+            //{
+            //    writer.WriteLine(saveToFile[i]);
+            //}
+        }
+
+        private static void CreateQAFailExtract(List<Issue> issues, string file)
+        {
+            
+        }
 
         //**********************************************************************************************************************************************************************************************
         //**********************************************************************************************************************************************************************************************
@@ -355,8 +477,6 @@ namespace JiraCon
             string lastKey = string.Empty;
             foreach (var iss in jissues)
             {
-
-                //only righgt if done or has qa failures or is bug
 
                 if (!lastKey.Equals(iss.Key))
                 {

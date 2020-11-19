@@ -62,7 +62,7 @@ namespace JiraCon
             consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("(M) Show Change History for 1 or more Cards");
-            consoleLines.AddConsoleLine("(J) Create extract files for all cards from JQL");
+            consoleLines.AddConsoleLine("(J) Create extract files");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("(K) Re-create config file.");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
