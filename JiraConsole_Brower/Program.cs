@@ -427,7 +427,7 @@ namespace JiraCon
             using (StreamWriter writer = new StreamWriter(file))
             {
 
-                writer.WriteLine("key,type,failedQADate,determinedBy,comments");
+                writer.WriteLine("key,type,summary,failedQADate,determinedBy,comments");
                 foreach (var iss in issues)
                 {
                     DateTime? devDoneDate = iss.GetDevDoneDate();
