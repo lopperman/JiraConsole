@@ -267,8 +267,7 @@ namespace JiraCon
                 var keys = Console.ReadKey();
                 if (keys.Key == ConsoleKey.Y)
                 {
-//                    CreateExtractFiles(jql);
-                    Sandbox(jql);
+                    CreateExtractFiles(jql);
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
                     Console.ReadKey();
@@ -320,24 +319,35 @@ namespace JiraCon
                     jissues.Add(newIssue);
                 }
 
-                List<string> saveToFile = new List<string>();
-
-                StreamWriter qaWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_QAFILURE.txt", false);
-                StreamWriter cycleTimeWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_CYCLETIME.txt", false);
-                StreamWriter cycleTimeVelocity = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_VELOCITY.txt", false);
-
                 var extractFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "JiraCon");
                 if (!Directory.Exists(extractFolder))
                 {
                     Directory.CreateDirectory(extractFolder);
                 }
 
-                CreateQAFailExtract(issues, Path.Combine(extractFolder, qaFailFile));
-                CreateCycleTimeExtract(issues, Path.Combine(extractFolder, qaFailFile));
-                CreateVBelocityExtract(issues, Path.Combine(extractFolder, qaFailFile));
-                CreateChangeLogExtract(issues, Path.Combine(extractFolder, qaFailFile));
-                CreateConfigExtract(issues, Path.Combine(extractFolder, qaFailFile),jql);
+                ConsoleUtil.WriteLine("Calculating QA Failures ...");
+                CreateQAFailExtract(jissues, Path.Combine(extractFolder, qaFailFile));
+                ConsoleUtil.WriteLine(string.Format("Created qa failures file ({0})", qaFailFile));
 
+                ConsoleUtil.WriteLine("Calculating cycle times...");
+                CreateCycleTimeExtract(jissues, Path.Combine(extractFolder, cycleTimeFile));
+                ConsoleUtil.WriteLine(string.Format("Created cycle time file ({0})", cycleTimeFile));
+
+                ConsoleUtil.WriteLine("Calculating velocities ...");
+                CreateVelocityExtract(jissues, Path.Combine(extractFolder, velocityFile));
+                ConsoleUtil.WriteLine(string.Format("Created velocity file ({0})", velocityFile));
+
+                //ConsoleUtil.WriteLine("Organizing change logs ...");
+                //CreateChangeLogExtract(jissues, Path.Combine(extractFolder, changeHistoryFile));
+                //ConsoleUtil.WriteLine(string.Format("Created change log file ({0})", changeHistoryFile));
+
+                ConsoleUtil.WriteLine("writing config for this extract process ...");
+                CreateConfigExtract(Path.Combine(extractFolder, extractConfigFile),jql);
+
+                ConsoleUtil.WriteLine(string.Format("Created config file ({0})", extractConfigFile));
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine(string.Format("Files are located in: {0}", extractFolder));
+                ConsoleUtil.WriteLine("");
 
             }
             catch (Exception ex)
@@ -348,91 +358,104 @@ namespace JiraCon
             }
         }
 
-        private static void CreateConfigExtract(List<Issue> issues, string file, string jql)
+        private static void CreateConfigExtract(string file, string jql)
         {
-            using (StreamWriter w = new StreamWriter(file))
+            using (StreamWriter w = new StreamWriter(file,false))
             {
                 w.WriteLine("***** JQL Used for Extract *****");
                 w.WriteLine("");
-                w.WriteLine(string.Format("{0}", jql));
+
+                w.WriteLine(jql);
             }
         }
 
-        private static void CreateChangeLogExtract(List<Issue> issues, string file)
-        {
-
-        }
-
-        private static void CreateVBelocityExtract(List<Issue> issues, string file)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void CreateCycleTimeExtract(List<Issue> issues, string file)
+        private static void CreateChangeLogExtract(List<JIssue> issues, string file)
         {
             //issues = issues.OrderBy(x => x.Key).ToList();
-            //List<string> saveToFile = new List<string>();
 
-            //string lastKey = string.Empty;
-
-            //foreach (var iss in issues)
+            //using (StreamWriter writer = new StreamWriter(file))
             //{
-            //    if (!lastKey.Equals(iss.Key))
+
+            //    writer.WriteLine("key,type,status,name");
+            //    foreach (var iss in issues)
             //    {
-            //        lastKey = iss.Key;
-            //        saveToFile.Add("");
-            //        saveToFile.Add(string.Format("****** ISSUE: {0} -- status: {1}", iss.Key, iss.StatusName));
-            //        saveToFile.Add(iss.CycleTimeSummary);
-
-            //        foreach (var s in iss.FailedQASummary)
-            //        {
-            //            saveToFile.Add(s);
-            //        }
-
             //        DateTime? devDoneDate = iss.GetDevDoneDate();
-            //        if (devDoneDate.HasValue && devDoneDate.Value.Date > new DateTime(2020, 6, 1))
+            //        if (devDoneDate.HasValue)
             //        {
-            //            cycleTimeVelocity.WriteLine(string.Format("{0},{1},{2}", iss.Key, iss.IssueType, devDoneDate.Value.ToShortDateString()));
+            //            //writer.WriteLine(string.Format("{0},{1},{2}", iss.Key, iss.IssueType,iss.StatusName,iss.devDoneDate.Value.ToShortDateString()));
             //        }
 
-            //        if (iss.FailedQASummary.Count > 0)
-            //        {
-            //            foreach (var s in iss.FailedQASummary)
-            //            {
-            //                qaWriter.WriteLine(s);
-            //            }
-            //        }
-            //        string ct = iss.CycleTimeSummary;
-            //        if (!string.IsNullOrWhiteSpace(ct) && ct.ToLower() != "n/a")
-            //        {
-            //            cycleTimeWriter.WriteLine(ct);
-            //        }
-            //    }
-
-            //    foreach (var cl in iss.GetStateChanges())
-            //    {
-            //        saveToFile.Add(string.Format("{0}:\t{1}", iss.Key, cl));
             //    }
             //}
 
-            //string filename = "/Users/paulbrower/METRICS_OCT2020.txt";
-
-            //if (File.Exists(filename))
-            //{
-            //    File.Delete(filename);
-            //}
-
-            //StreamWriter writer = new StreamWriter(filename, false);
-
-            //for (int i = 0; i < saveToFile.Count; i++)
-            //{
-            //    writer.WriteLine(saveToFile[i]);
-            //}
         }
 
-        private static void CreateQAFailExtract(List<Issue> issues, string file)
+        private static void CreateVelocityExtract(List<JIssue> issues, string file)
         {
-            
+            issues = issues.OrderBy(x => x.Key).ToList();
+
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+
+                writer.WriteLine("key,type,summary,doneDate");
+                foreach (var iss in issues)
+                {
+                    DateTime? devDoneDate = iss.GetDevDoneDate();
+                    if (devDoneDate.HasValue)
+                    {
+                        writer.WriteLine(string.Format("{0},{1},{2},{3}", iss.Key, iss.IssueType, iss.Summary, devDoneDate.Value.ToShortDateString()));
+                    }
+
+                }
+            }
+
+        }
+
+        private static void CreateCycleTimeExtract(List<JIssue> issues, string file)
+        {
+            issues = issues.OrderBy(x => x.Key).ToList();
+
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+
+                writer.WriteLine("key,type,summary,confidence,cycleTime,cycleTimeUom,inDevDate,doneDate,inDevCount");
+                foreach (var iss in issues)
+                {
+                    DateTime? devDoneDate = iss.GetDevDoneDate();
+                    if (devDoneDate.HasValue)
+                    {
+                        string ct = iss.CycleTimeSummary;
+                        if (!string.IsNullOrWhiteSpace(ct) && ct.ToLower() != "n/a")
+                        {
+                            writer.WriteLine(ct);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void CreateQAFailExtract(List<JIssue> issues, string file)
+        {
+            issues = issues.OrderBy(x => x.Key).ToList();
+
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+
+                writer.WriteLine("key,type,failedQADate,determinedBy,comments");
+                foreach (var iss in issues)
+                {
+                    DateTime? devDoneDate = iss.GetDevDoneDate();
+                    if (iss.FailedQASummary.Count > 0)
+                    {
+                        foreach (var s in iss.FailedQASummary)
+                        {
+                            writer.WriteLine(s);
+                        }
+                    }
+
+                }
+            }
+
         }
 
         //**********************************************************************************************************************************************************************************************

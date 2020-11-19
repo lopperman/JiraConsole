@@ -22,7 +22,7 @@ namespace JiraCon
 
         public JIssue()
         {
-
+            
         }
 
         public JIssue(Issue issue)
@@ -46,6 +46,7 @@ namespace JiraCon
         public string StatusCategoryName { get; set; }
         public string ParentIssueKey { get; set; }
         public string IssueType { get; set; }
+        public string Summary { get; set; }
 
         private void Initialize()
         {
@@ -68,6 +69,7 @@ namespace JiraCon
             if (_issue == null) return;
 
             Key = _issue.Key.Value;
+            Summary = _issue.Summary.Replace(",", " ");
             Project = _issue.Project;
             CreateDate = _issue.Created ?? null;
             UpdateDate = _issue.Updated ?? null;
@@ -161,17 +163,16 @@ namespace JiraCon
 
                 if (cLogs.Count() > 0 || InQABackwardsCount > 0)
                 {
-
+                   //key,type,summary,failedQADate,determinedBy,comments
                     foreach (var cl in cLogs)
                     {
                         foreach (var cli in cl.Items.Where(x=>x.ToValue == "QA Failed"))
                         {
-                            ret.Add(string.Format("{0} - QA Info - ** QA Failed Status On {1} ** ", Key, cl.CreatedDate));
-
+                            ret.Add(string.Format("{0},{1},{2},QAFailed Status,", Key, IssueType, cl.CreatedDate.ToShortDateString(),Summary));
                         }
                         foreach (var cli in cl.Items.Where(x => x.FieldName == "labels" && x.ToValue.ToLower().Contains("fail")).ToList())
                         {
-                            ret.Add(string.Format("{0} - QA Info - ** {1} ** label added on {2}", Key, cli.ToValue, cl.CreatedDate));
+                            ret.Add(string.Format("{0},{1},{4},{2},QAFailed Label,'{3}' Label Added", Key, IssueType, cl.CreatedDate.ToShortDateString(),cli.ToValue,Summary));
                         }
                     }
 
@@ -254,7 +255,7 @@ namespace JiraCon
                     DateTime dev = toInDev[0].Date;
 
                     double days = JHelper.BusinessDaysUntil(dev,devDoneDate.Value.Date);
-                    ret = string.Format("{0},Checked,{1},days,{2},InDev,{3},done", Key, days, dev, devDoneDate.Value);
+                    ret = string.Format("{0},{5},{6},Checked,{1},days,{2},{3},{4}", Key, days, dev.ToShortDateString(), devDoneDate.Value.ToShortDateString(),toInDev.Count,IssueType,Summary);
 
                 }
                 else if (toInDev.Count > 1)
@@ -262,8 +263,7 @@ namespace JiraCon
                     DateTime dev = toInDev[0];
 
                     double days = JHelper.BusinessDaysUntil(dev, devDoneDate.Value.Date);
-                    ret = string.Format("{0},NotSure,{1},days,{2},InDev,{3},done,{4},devdates", Key, days, dev, devDoneDate.Value,toInDev.Count);
- 
+                    ret = string.Format("{0},{5},{6},NotSure,{1},days,{2},{3},{4}", Key, days, dev.ToShortDateString(), devDoneDate.Value.ToShortDateString(),toInDev.Count,IssueType,Summary);
                 }
 
 
