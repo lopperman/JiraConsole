@@ -170,7 +170,8 @@ namespace JiraCon
                 var keys = Console.ReadKey();
                 if (keys.Key == ConsoleKey.Y)
                 {
-                    ConsoleUtil.WriteLine("Enter (Y)es to incclude card descriptions and comments in the Change History file, otherwise press any key");
+                    ConsoleUtil.WriteLine("Enter (Y)es to include card descriptions and comments in the Change History file, otherwise press any key");
+                    ConsoleUtil.WriteLine("");
                     var k = Console.ReadKey();
                     Console.WriteLine();
                     bool includeCommentsAndDesc = false;
