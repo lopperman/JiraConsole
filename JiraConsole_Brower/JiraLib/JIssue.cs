@@ -168,11 +168,11 @@ namespace JiraCon
                     {
                         foreach (var cli in cl.Items.Where(x=>x.ToValue == "QA Failed"))
                         {
-                            ret.Add(string.Format("{0},{1},{2},QAFailed,Status,", Key, IssueType, cl.CreatedDate.ToShortDateString(),Summary));
+                            ret.Add(string.Format("{0},{1},{2},QAFailed,StatusChange,", Key, IssueType, cl.CreatedDate.ToShortDateString(),Summary));
                         }
                         foreach (var cli in cl.Items.Where(x => x.FieldName == "labels" && x.ToValue.ToLower().Contains("fail")).ToList())
                         {
-                            ret.Add(string.Format("{0},{1},{4},{2},QAFailed,Label,'{3}' Label Added", Key, IssueType, cl.CreatedDate.ToShortDateString(),cli.ToValue,Summary));
+                            ret.Add(string.Format("{0},{1},{4},{2},QAFailedLabel,'{3}' Label Added", Key, IssueType, cl.CreatedDate.ToShortDateString(),cli.ToValue,Summary));
                         }
                     }
 
