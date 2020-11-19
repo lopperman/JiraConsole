@@ -10,11 +10,11 @@ namespace JiraCon
     {
         private Issue _issue = null;
 
-        private List<string> _components = null;
-        private SortedDictionary<string, string[]> _customFields = null;
-        private List<string> _labels = null;
-        private List<JIssue> _subTasks = null;
-        private List<JIssueChangeLog> _changeLogs = null;
+        private List<string> _components = new List<string>();
+        private SortedDictionary<string, string[]> _customFields = new SortedDictionary<string, string[]>();
+        private List<string> _labels = new List<string>();
+        private List<JIssue> _subTasks = new List<JIssue>();
+        private List<JIssueChangeLog> _changeLogs = new List<JIssueChangeLog>();
         private List<string> preDevStatuses = new List<string>();
         private List<string> preQAStatuses = new List<string>();
 
@@ -175,12 +175,6 @@ namespace JiraCon
                             ret.Add(string.Format("{0},{1},{4},{2},QAFailed Label,'{3}' Label Added", Key, IssueType, cl.CreatedDate.ToShortDateString(),cli.ToValue,Summary));
                         }
                     }
-
-
-                    //if (InQABackwardsCount > 0)
-                    //{
-                    //    ret.Add(string.Format("{0} - QA Info -- Card was moved backwards from QA ** {1} ** times.", Key, InQABackwardsCount));
-                    //}
 
                 }
 
@@ -398,7 +392,7 @@ namespace JiraCon
                 {
                     _labels = new List<string>();
                 }
-                return Labels;
+                return _labels;
             }
             set
             {

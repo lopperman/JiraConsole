@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using Atlassian.Jira;
+using Newtonsoft.Json;
 
 namespace JiraCon
 {
@@ -12,7 +13,6 @@ namespace JiraCon
     {
         private static bool _initialized = false;
         static JiraConfiguration config = null;
-        static JiraRestClientSettings _settings = null;
         private static string[] _args = null;
 
         public static void Main(string[] args)
@@ -35,103 +35,6 @@ namespace JiraCon
             ConsoleUtil.Lines.ByeBye();
             Environment.Exit(0);
         }
-
-
-        //private static void KillConfig()
-        //{
-        //    var personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "/Library/Application Support/JiraCon";
-        //    if (Directory.Exists(personalFolder))
-        //    {
-        //        string configFile = Path.Combine(personalFolder, configFileName);
-        //        if (File.Exists(configFile))
-        //        {
-        //            File.Delete(configFile);
-        //        }
-        //    }
-
-        //    ConsoleUtil.WriteLine("Config file has been deleted. Run program again to create new config file. Press any key to exit.",ConsoleColor.White,ConsoleColor.DarkMagenta,true);
-        //    Console.ReadKey();
-        //}
-
-        //private static string[] GetConfig()
-        //{
-        //    string[] ret = null;
-
-        //    var personalFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "/Library/Application Support/JiraCon";
-        //    if (!Directory.Exists(personalFolder))
-        //    {
-        //        Directory.CreateDirectory(personalFolder);
-        //    }
-        //    string configFile = Path.Combine(personalFolder, configFileName);
-
-        //    if (File.Exists(configFile))
-        //    {
-        //        //check to confirm file has 3 arguments
-        //        using (StreamReader reader = new StreamReader(configFile))
-        //        {
-        //            var text = reader.ReadLine();
-        //            if (!string.IsNullOrWhiteSpace(text))
-        //            {
-        //                var arr = text.Split(' ');
-        //                if (arr.Length == 3)
-        //                {
-        //                    ret = arr;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    if (ret == null)
-        //    {
-        //        string userName = "";
-        //        string apiToken = "";
-        //        string jiraBaseUrl = "";
-
-        //        userName = GetConsoleInput("Missing config -- please enter username (email address) for Jira login:");
-        //        apiToken = GetConsoleInput("Missing config -- please enter API token for Jira login:");
-        //        jiraBaseUrl = GetConsoleInput("Missing config -- please enter base url for Jira instance:");
-
-        //        bool validCredentials = false;
-        //        //test connection
-        //        try
-        //        {
-        //            ConsoleUtil.WriteLine("testing Jira connection ...");
-        //            var testConn = new JiraRepo(jiraBaseUrl, userName, apiToken);
-
-        //            if (testConn != null)
-        //            {
-        //                var test = testConn.GetJira().IssueTypes.GetIssueTypesAsync().Result.ToList();
-        //                if (test != null && test.Count > 0)
-        //                {
-        //                    validCredentials = true;
-        //                    ConsoleUtil.WriteLine("testing Jira connection ... successful");
-        //                }
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            ConsoleUtil.WriteLine("testing Jira connection ... failed");
-        //            ConsoleUtil.WriteLine(ex.Message);
-        //        }
-
-        //        if (!validCredentials)
-        //        {
-        //            return GetConfig();
-        //        }
-        //        else
-        //        {
-        //            using (StreamWriter writer = new StreamWriter(configFile))
-        //            {
-        //                writer.WriteLine(string.Format("{0} {1} {2}", userName, apiToken, jiraBaseUrl));
-        //            }
-        //            return GetConfig();
-        //        }
-        //    }
-
-        //    return ret;
-
-        //}
-
 
         private static bool MainMenu()
         {
@@ -256,18 +159,46 @@ namespace JiraCon
                 Console.ReadKey();
                 return true;
             }
-            else if (resp.Key == ConsoleKey.J)
+            else if (resp.Key == ConsoleKey.E)
             {
                 
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
                 var jql = Console.ReadLine();
                 ConsoleUtil.WriteLine("");
-                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n\r\n{0}", jql));
+                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n***** {0}", jql));
                 var keys = Console.ReadKey();
                 if (keys.Key == ConsoleKey.Y)
                 {
-                    CreateExtractFiles(jql);
+                    ConsoleUtil.WriteLine("Enter (Y)es to incclude card descriptions and comments in the Change History file, otherwise press any key");
+                    var k = Console.ReadKey();
+                    Console.WriteLine();
+                    bool includeCommentsAndDesc = false;
+                    if (k.Key == ConsoleKey.Y)
+                    {
+                        includeCommentsAndDesc = true;
+                    }
+
+                    CreateExtractFiles(jql,includeCommentsAndDesc);
+                    ConsoleUtil.WriteLine("");
+                    ConsoleUtil.WriteLine("Press any key to continue.");
+                    Console.ReadKey();
+                }
+                return true;
+
+            }
+            else if (resp.Key == ConsoleKey.J)
+            {
+
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
+                var jql = Console.ReadLine();
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n***** {0}", jql));
+                var keys = Console.ReadKey();
+                if (keys.Key == ConsoleKey.Y)
+                {
+                    ShowJSON(jql);
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
                     Console.ReadKey();
@@ -283,7 +214,7 @@ namespace JiraCon
             return false;
         }
 
-        private static void CreateExtractFiles(string jql)
+        private static void CreateExtractFiles(string jql, bool includeCommentsAndDesc)
         {
             try
             {
@@ -334,9 +265,9 @@ namespace JiraCon
                 CreateVelocityExtract(jissues, Path.Combine(extractFolder, velocityFile));
                 ConsoleUtil.WriteLine(string.Format("Created velocity file ({0})", velocityFile));
 
-                //ConsoleUtil.WriteLine("Organizing change logs ...");
-                //CreateChangeLogExtract(jissues, Path.Combine(extractFolder, changeHistoryFile));
-                //ConsoleUtil.WriteLine(string.Format("Created change log file ({0})", changeHistoryFile));
+                ConsoleUtil.WriteLine("Organizing change logs ...");
+                CreateChangeLogExtract(jissues, Path.Combine(extractFolder, changeHistoryFile),includeCommentsAndDesc);
+                ConsoleUtil.WriteLine(string.Format("Created change log file ({0})", changeHistoryFile));
 
                 ConsoleUtil.WriteLine("writing config for this extract process ...");
                 CreateConfigExtract(Path.Combine(extractFolder, extractConfigFile),jql);
@@ -345,6 +276,64 @@ namespace JiraCon
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine(string.Format("Files are located in: {0}", extractFolder));
                 ConsoleUtil.WriteLine("");
+
+            }
+            catch (Exception ex)
+            {
+                ConsoleUtil.WriteLine("*** An error has occurred ***", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine(ex.Message, ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine(ex.StackTrace, ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+            }
+        }
+
+        private static void ShowJSON(string jql)
+        {
+            try
+            {
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine(string.Format("getting issues from JQL:{0}", Environment.NewLine));
+                ConsoleUtil.WriteLine(string.Format("{0}", jql));
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine("Querying JIRA ...");
+                ConsoleUtil.WriteLine("");
+
+                var issues = JiraUtil.JiraRepo.GetIssues(jql);
+
+                ConsoleUtil.WriteLine(string.Format("Retrieved {0} issues", issues.Count()));
+
+                List<JIssue> jissues = new List<JIssue>();
+
+                foreach (var issue in issues)
+                {
+                    ConsoleUtil.WriteLine(string.Format("getting changelogs for {0}", issue.Key.Value));
+                    JIssue newIssue = new JIssue(issue);
+                    newIssue.AddChangeLogs(JiraUtil.JiraRepo.GetIssueChangeLogs(issue));
+
+                    jissues.Add(newIssue);
+                }
+
+                var extractFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "JiraCon");
+                if (!Directory.Exists(extractFolder))
+                {
+                    Directory.CreateDirectory(extractFolder);
+                }
+
+                DateTime now = DateTime.Now;
+                string fileNameSuffix = string.Format("_{0:0000}{1}{2:00}_{3}.txt", now.Year, now.ToString("MMM"), now.Day, now.ToString("hhmmss"));
+                string jsonFile = String.Format("JiraCon_JSON_{0}", fileNameSuffix);
+
+                ConsoleUtil.WriteLine(string.Format("saving JSON to {0}", Path.Combine(extractFolder,jsonFile)));
+
+                using (StreamWriter w = new StreamWriter(Path.Combine(extractFolder,jsonFile)))
+                {
+                    foreach (var jiss in jissues)
+                    {
+                        w.WriteLine(JsonConvert.SerializeObject(jiss, Formatting.Indented));
+                    }
+                }
+
+                ConsoleUtil.WriteLine("file saved successfully");
+
 
             }
             catch (Exception ex)
@@ -366,7 +355,7 @@ namespace JiraCon
             }
         }
 
-        private static void CreateChangeLogExtract(List<JIssue> issues, string file)
+        private static void CreateChangeLogExtract(List<JIssue> issues, string file,bool includeCommentsAndDesc)
         {
             //issues = issues.OrderBy(x => x.Key).ToList();
 
@@ -455,28 +444,14 @@ namespace JiraCon
 
         }
 
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-        //                                  KEEP FINAL CODE ABOVE THIS LINE
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-        //**********************************************************************************************************************************************************************************************
-
-
         public static void AnalyzeIssues(string cardNumbers, bool includeDescAndComments)
         {
             string[] arr = cardNumbers.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < arr.Length; i++)
             {
-                AnalyzeOneIssue(arr[i],includeDescAndComments);
+                AnalyzeOneIssue(arr[i], includeDescAndComments);
             }
         }
-
-
 
         public static void AnalyzeOneIssue(string key, bool includeDescAndComments)
         {
@@ -490,32 +465,31 @@ namespace JiraCon
             if (issue == null)
             {
                 ConsoleUtil.WriteLine("***** Jira Card: " + key + " NOT FOUND!", ConsoleColor.DarkBlue, ConsoleColor.White, false);
-                ConsoleUtil.SetDefaultConsoleColors();
                 return;
             }
 
+            ConsoleUtil.WriteLine(string.Format("***** loading change logs for {0}-({1}):",key,issue.Summary));
 
-            ConsoleUtil.WriteLine("***** loading change logs for {0}: " + key);
+            var jIss = new JIssue(issue);
+            jIss.AddChangeLogs(JiraUtil.JiraRepo.GetIssueChangeLogs(issue));
 
-            var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
+            ConsoleUtil.WriteLine(string.Format("Found {0} change logs for {1}", jIss.ChangeLogs.Count, key));
 
-            ConsoleUtil.WriteLine(string.Format("Found {0} change logs for {1}", changeLogs.Count, key));
-
-            for (int i = 0; i < changeLogs.Count; i++)
+            for (int i = 0; i < jIss.ChangeLogs.Count; i++)
             {
                 ConsoleUtil.SetDefaultConsoleColors();
 
-                IssueChangeLog changeLog = changeLogs[i];
+                JIssueChangeLog changeLog = jIss.ChangeLogs[i];
 
 
-                foreach (IssueChangeLogItem cli in changeLog.Items)
+                foreach (JIssueChangeLogItem cli in changeLog.Items)
                 {
                     if (cli.FieldName.ToLower().StartsWith("desc") || cli.FieldName.ToLower().StartsWith("comment"))
                     {
                         if (includeDescAndComments)
                         {
                             ConsoleUtil.WriteAppend(string.Format("{0} - Changed On {1}, {2} field changed ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName), ConsoleUtil.DefaultConsoleForeground, ConsoleUtil.DefaultConsoleBackground, true);
-                            ConsoleUtil.WriteAppend(string.Format("\t{0} changed from ",cli.FieldName), true);
+                            ConsoleUtil.WriteAppend(string.Format("\t{0} changed from ", cli.FieldName), true);
                             ConsoleUtil.WriteAppend(string.Format("{0}", cli.FromValue), ConsoleColor.DarkGreen, ConsoleUtil.DefaultConsoleBackground, true);
                             ConsoleUtil.WriteAppend(string.Format("\t{0} changed to ", cli.FieldName), true);
                             ConsoleUtil.WriteAppend(string.Format("{0}", cli.ToValue), ConsoleColor.Green, ConsoleUtil.DefaultConsoleBackground, true);
@@ -523,8 +497,6 @@ namespace JiraCon
                     }
                     else
                     {
-
-
                         if (cli.FieldName.ToLower().StartsWith("status"))
                         {
                             Console.Write("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
@@ -549,16 +521,34 @@ namespace JiraCon
                         else
                         {
                             Console.WriteLine("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue);
-
                         }
-
                     }
                 }
             }
-            ConsoleUtil.WriteLine("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false);
 
-            ConsoleUtil.SetDefaultConsoleColors();
+            //ConsoleUtil.WriteLine("***** JSON for  " + key + " *****", ConsoleColor.Black, ConsoleColor.Cyan, false);
+            //ConsoleUtil.WriteLine(JsonConvert.SerializeObject(jIss,Formatting.Indented), ConsoleColor.DarkBlue, ConsoleColor.Cyan, false);
+
+            //ConsoleUtil.WriteLine("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false);
+
         }
+
+
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+        //                                  KEEP FINAL CODE ABOVE THIS LINE
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+        //**********************************************************************************************************************************************************************************************
+
+
+
+
+
 
 
         /// <summary>
