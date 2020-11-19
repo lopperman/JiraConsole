@@ -287,9 +287,6 @@ namespace JiraCon
         {
             try
             {
-                Console.WriteLine("** Hey Paul, don't forget to include the filter options for each file type **");
-                Console.ReadLine();
-
                 DateTime now = DateTime.Now;
                 string fileNameSuffix = string.Format("_{0:0000}{1}{2:00}_{3}.txt", now.Year, now.ToString("MMM"), now.Day, now.ToString("hhmmss"));
 
@@ -470,98 +467,6 @@ namespace JiraCon
         //**********************************************************************************************************************************************************************************************
 
 
-        private static void Sandbox(string jql)
-        {
-
-            //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived)";
-            //string jql = "key in (BAM-1238, BAM-2170, POS-426, BAM-2154)";
-            //string jql = "project in (BAM, POS) AND issuetype in (Bug, Story, Subtask, Sub-task) AND updatedDate >= 2020-06-01 AND status not in (Backlog, Archive, Archived, Bug_Archive) AND statusCategoryChangedDate >= 2020-06-01 AND (labels is EMPTY OR labels not in (JM, JM-Work, JMPOS-Work, JM_Work, jm-work, Metrics-Ignore)) and (component != Infrastructure OR component is EMPTY)";
-            var issues = JiraUtil.JiraRepo.GetIssues(jql);
-
-            List<JIssue> jissues = new List<JIssue>();
-
-            foreach (var issue in issues)
-            {
-                ConsoleUtil.WriteLine(string.Format("getting changelogs for {0}", issue.Key.Value));
-                JIssue newIssue = new JIssue(issue);
-                newIssue.AddChangeLogs(JiraUtil.JiraRepo.GetIssueChangeLogs(issue));
-
-                jissues.Add(newIssue);
-            }
-
-            List<string> saveToFile = new List<string>();
-
-            StreamWriter qaWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_QAFILURE.txt", false);
-            StreamWriter cycleTimeWriter = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_CYCLETIME.txt", false);
-            StreamWriter cycleTimeVelocity = new StreamWriter("/Users/paulbrower/METRICS_OCT2020_VELOCITY.txt", false);
-
-            jissues = jissues.OrderBy(x => x.Key).ToList();
-
-            string lastKey = string.Empty;
-            foreach (var iss in jissues)
-            {
-
-                if (!lastKey.Equals(iss.Key))
-                {
-                    lastKey = iss.Key;
-                    saveToFile.Add("");
-                    saveToFile.Add(string.Format("****** ISSUE: {0} -- status: {1}", iss.Key, iss.StatusName));
-                    saveToFile.Add(iss.CycleTimeSummary);
-
-                    foreach (var s in iss.FailedQASummary)
-                    {
-                        saveToFile.Add(s);
-                    }
-
-                    DateTime? devDoneDate = iss.GetDevDoneDate();
-                    if (devDoneDate.HasValue && devDoneDate.Value.Date > new DateTime(2020,6,1))
-                    {
-                        cycleTimeVelocity.WriteLine(string.Format("{0},{1},{2}", iss.Key,iss.IssueType, devDoneDate.Value.ToShortDateString()));
-                    }
-
-                    if (iss.FailedQASummary.Count > 0)
-                    {
-                        foreach (var s in iss.FailedQASummary)
-                        {
-                            qaWriter.WriteLine(s);
-                        }
-                    }
-                    string ct = iss.CycleTimeSummary;
-                    if (!string.IsNullOrWhiteSpace(ct) && ct.ToLower() != "n/a")
-                    {
-                        cycleTimeWriter.WriteLine(ct);
-                    }
-                }
-
-                foreach (var cl in iss.GetStateChanges())
-                {
-                    saveToFile.Add(string.Format("{0}:\t{1}", iss.Key, cl));
-                }
-            }
-
-            string filename = "/Users/paulbrower/METRICS_OCT2020.txt";
-
-            if (File.Exists(filename))
-            {
-                File.Delete(filename);
-            }
-
-            StreamWriter writer = new StreamWriter(filename,false);
-
-            for (int i = 0; i < saveToFile.Count; i ++)
-            {
-                writer.WriteLine(saveToFile[i]);
-            }
-
-            writer.Close();
-            qaWriter.Close();
-            cycleTimeWriter.Close();
-            cycleTimeVelocity.Close();
-
-            string checksaveToFile = "";
-
-        }
-
         public static void AnalyzeIssues(string cardNumbers, bool includeDescAndComments)
         {
             string[] arr = cardNumbers.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -571,87 +476,7 @@ namespace JiraCon
             }
         }
 
-        //public static string AnalyzeIssue(string key)
-        //{
-        //    //var settings = new JiraRestClientSettings();
-        //    //settings.EnableUserPrivacyMode = false;
 
-        //    ConsoleUtil.WriteLine("");
-        //    ConsoleUtil.WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
-
-        //    StringBuilder sb = new StringBuilder();
-
-        //    IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
-        //    options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
-        //    options.FetchBasicFields = true;
-
-        //    var issue = JiraUtil.JiraRepo.GetJira().Issues.Queryable.Where(x => x.Project == config.jiraProjectKey && x.Key == key).FirstOrDefault();
-
-        //    if (issue == null)
-        //    {
-        //        sb.AppendLine(string.Format("***** Jira Card: " + key + " NOT FOUND!", ConsoleColor.DarkBlue, ConsoleColor.White, false));
-        //        return sb.ToString();
-        //    }
-
-        //    var labels = issue.Labels;
-
-        //    var backClr = Console.BackgroundColor;
-        //    var foreClr = Console.ForegroundColor;
-
-        //    var changeLogs = issue.GetChangeLogsAsync().Result.ToList<IssueChangeLog>();
-
-        //    List<string> importantFields = new List<string>();
-        //    importantFields.Add("status");
-        //    importantFields.Add("feature team choices");
-        //    importantFields.Add("labels");
-        //    importantFields.Add("resolution");
-
-
-
-        //    for (int i = 0; i < changeLogs.Count; i++)
-        //    {
-        //        IssueChangeLog changeLog = changeLogs[i];
-
-                
-
-        //        foreach (IssueChangeLogItem cli in changeLog.Items)
-        //        {
-        //            if (!importantFields.Contains(cli.FieldName.ToLower()))
-        //            {
-        //                continue;
-        //            }
-        //            else
-        //            {
-
-
-        //                if (cli.FieldName.ToLower().StartsWith("status"))
-        //                {
-        //                    sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
-
-        //                    sb.AppendFormat("{0}", cli.ToValue);
-        //                    sb.AppendFormat(Environment.NewLine);
-        //                }
-        //                else if (cli.FieldName.ToLower().StartsWith("label"))
-        //                {
-        //                    sb.AppendFormat("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
-
-        //                    sb.AppendFormat("{0}", cli.ToValue);
-        //                    sb.AppendFormat(Environment.NewLine);
-        //                }
-
-        //                else
-        //                {
-        //                    sb.AppendLine(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue));
-
-        //                }
-
-        //            }
-        //        }
-        //    }
-        //    sb.AppendLine(string.Format("***** Jira Card: " + key + " END", ConsoleColor.DarkBlue, ConsoleColor.White, false));
-
-        //    return sb.ToString();
-        //}
 
         public static void AnalyzeOneIssue(string key, bool includeDescAndComments)
         {
