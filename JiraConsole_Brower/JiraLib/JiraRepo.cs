@@ -14,7 +14,9 @@ namespace JiraCon
     public class JiraRepo: IJiraRepo
     {
         private Jira _jira;
-        
+
+        private List<JField> _fieldList = new List<JField>();
+        private string _epicLinkFieldKey = string.Empty;
 
         public JiraRepo(string server, string userName, string password)
         {
@@ -26,6 +28,15 @@ namespace JiraCon
             _jira = Atlassian.Jira.Jira.CreateRestClient(server, userName, password,settings);
 
             _jira.Issues.MaxIssuesPerRequest = 500;
+
+            _fieldList = GetFields();
+
+            JField jField = _fieldList.Where(x => x.Name == "Epic Link").FirstOrDefault();
+
+            if (jField != null)
+            {
+                _epicLinkFieldKey = jField.Key;
+            }
 
         }
 
@@ -84,8 +95,76 @@ namespace JiraCon
             return GetIssueTypeStatusesAsync(projKey, issueType).GetAwaiter().GetResult().ToList();
         }
 
+        public List<JField> GetFields()
+        {
+            var ret = GetFieldsAsync().GetAwaiter().GetResult().ToList();
 
-        
+            string data = ret[0].Name;
+
+            JArray json = JArray.Parse(data);
+
+            for (int i = 0; i < json.Count; i++)
+            {
+                try
+                {
+                    JToken j = json[i];
+                    var k = j["key"].Value<string>();
+                    var n = j["name"].Value<string>();
+                    ret.Add(new JField(k, n));
+                }
+                catch (Exception ex)
+                {
+                    //but keep on going1
+                }
+            }
+
+
+            return ret;
+        }
+
+        public async Task<List<JField>>GetFieldsAsync(CancellationToken token = default(CancellationToken))
+        {
+            var ret = new List<JField>();
+
+
+            var resourceUrl = String.Format("rest/api/3/field");
+            var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
+            var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
+                .ConfigureAwait(false);
+            
+            ret.Add(new JField("text", response.ToString()));
+
+            //JToken fields = response["values"];
+
+            //if (fields != null)
+            //{
+            //    var items = fields.Select(cl => JsonConvert.DeserializeObject(cl.ToString(), serializerSettings));
+            //}
+
+            return ret;
+        }
+
+        //public async Task<List<JField>> GetFieldsAsync(CancellationToken token = default(CancellationToken))
+        //{
+        //    var ret = new List<JField>();
+
+
+        //    var resourceUrl = String.Format("rest/api/3/field");
+        //    var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
+        //    var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
+        //        .ConfigureAwait(false);
+
+        //    JToken fields = response["values"];
+
+        //    if (fields != null)
+        //    {
+        //        var items = fields.Select(cl => JsonConvert.DeserializeObject(cl.ToString(), serializerSettings));
+        //    }
+
+        //    return ret;
+        //}
+
+
         public async Task<List<IssueStatus>> GetIssueTypeStatusesAsync(string projKey, string issueType, CancellationToken token = default(CancellationToken))
         {
 
@@ -215,7 +294,7 @@ namespace JiraCon
 
         public List<Issue> GetIssues(string jql)
         {
-            return GetIssues(jql, true);        
+            return GetIssues(jql, true, "customfield_10015");        
         }
 
         /// <summary>
@@ -243,12 +322,15 @@ namespace JiraCon
 
         public Issue GetIssue(string key)
         {
-            //IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
-            IssueSearchOptions options = new IssueSearchOptions(string.Format("Key = {0}", key));
-            options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
-            options.FetchBasicFields = true;            
+            return GetIssues(string.Format("key={0}", key)).FirstOrDefault();
 
-            return GetJira().Issues.Queryable.Where(x=>x.Key == key).FirstOrDefault();
+
+            ////IssueSearchOptions options = new IssueSearchOptions(string.Format("project={0}", config.jiraProjectKey));
+            //IssueSearchOptions options = new IssueSearchOptions(string.Format("Key = {0}", key));
+            //options.MaxIssuesPerRequest = 50; //this is wishful thinking on my part -- client has this set at 20 -- unless you're a Jira admin, got to live with it.
+            //options.FetchBasicFields = true;            
+
+            //return GetJira().Issues.Queryable.Where(x=>x.Key == key).FirstOrDefault();
 
         }
 
@@ -278,6 +360,23 @@ namespace JiraCon
 
         }
 
+    }
+
+    public class JField
+    {
+        public JField()
+        {
+
+        }
+
+        public JField(string key, string name)
+        {
+            Key = key;
+            Name = name;
+        }
+
+        public string Key { get; set; }
+        public string Name { get; set; }
     }
 
     public interface IJiraRepo
