@@ -386,13 +386,13 @@ namespace JiraCon
             using (StreamWriter writer = new StreamWriter(file))
             {
 
-                writer.WriteLine("key,type,summary,doneDate");
+                writer.WriteLine("key,type,summary,epicLink,doneDate");
                 foreach (var iss in issues)
                 {
                     DateTime? devDoneDate = iss.GetDevDoneDate();
                     if (devDoneDate.HasValue)
                     {
-                        writer.WriteLine(string.Format("{0},{1},{2},{3}", iss.Key, iss.IssueType, iss.Summary, devDoneDate.Value.ToShortDateString()));
+                        writer.WriteLine(string.Format("{0},{1},{2},{3}", iss.Key, iss.IssueType, iss.Summary, iss.EpicLinkKey, devDoneDate.Value.ToShortDateString()));
                     }
 
                 }
@@ -407,7 +407,7 @@ namespace JiraCon
             using (StreamWriter writer = new StreamWriter(file))
             {
 
-                writer.WriteLine("key,type,summary,confidence,cycleTime,cycleTimeUom,inDevDate,doneDate,inDevCount");
+                writer.WriteLine("key,type,summary,epicLink,confidence,cycleTime,cycleTimeUom,inDevDate,doneDate,inDevCount");
                 foreach (var iss in issues)
                 {
                     DateTime? devDoneDate = iss.GetDevDoneDate();
@@ -430,7 +430,8 @@ namespace JiraCon
             using (StreamWriter writer = new StreamWriter(file))
             {
 
-                writer.WriteLine("key,type,summary,failedQADate,determinedBy,comments");
+                writer.WriteLine("key,type,summary,epicLink," +
+                    "failedQADate,determinedBy,comments");
                 foreach (var iss in issues)
                 {
                     DateTime? devDoneDate = iss.GetDevDoneDate();

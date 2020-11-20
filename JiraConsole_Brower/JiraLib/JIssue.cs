@@ -6,12 +6,26 @@ using Newtonsoft.Json;
 
 namespace JiraCon
 {
+    public class JCustomField
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string[] Values { get; set; }
+
+        public JCustomField(string id, string name, string[] values)
+        {
+            Id = id;
+            Name = name;
+            Values = values;
+        }
+    }
+
     public class JIssue
     {
         private Issue _issue = null;
 
         private List<string> _components = new List<string>();
-        private SortedDictionary<string, string[]> _customFields = new SortedDictionary<string, string[]>();
+        private List<JCustomField> _customFields = new List<JCustomField>();
         private List<string> _labels = new List<string>();
         private List<JIssue> _subTasks = new List<JIssue>();
         private List<JIssueChangeLog> _changeLogs = new List<JIssueChangeLog>();
@@ -87,16 +101,35 @@ namespace JiraCon
             ParentIssueKey = _issue.ParentIssueKey;
             IssueType = _issue.Type.Name;
 
-            var epicLinkFieldName = JiraUtil.JiraRepo.EpicLinkFieldName;
-            if (!string.IsNullOrWhiteSpace(epicLinkFieldName))
+            if (_issue.CustomFields != null)
             {
-                var customFieldValues = GetCustomFieldValues<string>(epicLinkFieldName);
-                if (customFieldValues != null && customFieldValues.Count == 1)
+                foreach (var cf in _issue.CustomFields)
                 {
-                    ParentKey = customFieldValues[0];
+                    _customFields.Add(new JCustomField(cf.Id, cf.Name, cf.Values));
                 }
             }
 
+        }
+
+        public string EpicLinkKey
+        {
+            get
+            {
+                string ret = string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(JiraUtil.JiraRepo.EpicLinkFieldName))
+                {
+                    var epicLinkCustomField = _customFields.Where(x => x.Id == JiraUtil.JiraRepo.EpicLinkFieldName).SingleOrDefault();
+                    if (epicLinkCustomField != null)
+                    {
+                        if (epicLinkCustomField.Values.Length > 0)
+                        {
+                            return epicLinkCustomField.Values[0];
+                        }
+                    }
+                }
+                return ret;
+            }
         }
 
         [JsonIgnore]
@@ -180,11 +213,11 @@ namespace JiraCon
                     {
                         foreach (var cli in cl.Items.Where(x=>x.ToValue == "QA Failed"))
                         {
-                            ret.Add(string.Format("{0},{1},{2},{3},StatusChange,Moved to QA Failed", Key, IssueType, Summary, cl.CreatedDate.ToShortDateString()));
+                            ret.Add(string.Format("{0},{1},{2},{3},{4},StatusChange,Moved to QA Failed", Key, IssueType, Summary, EpicLinkKey, cl.CreatedDate.ToShortDateString()));
                         }
                         foreach (var cli in cl.Items.Where(x => x.FieldName == "labels" && x.ToValue.ToLower().Contains("fail")).ToList())
                         {
-                            ret.Add(string.Format("{0},{1},{2},{3},QAFailedLabel,'{4}' Label Added", Key, IssueType, Summary, cl.CreatedDate.ToShortDateString(),cli.ToValue));
+                            ret.Add(string.Format("{0},{1},{2},{3},{4},QAFailedLabel,'{5}' Label Added", Key, IssueType, Summary, EpicLinkKey, cl.CreatedDate.ToShortDateString(),cli.ToValue));
                         }
                     }
 
@@ -261,7 +294,7 @@ namespace JiraCon
                     DateTime dev = toInDev[0].Date;
 
                     double days = JHelper.BusinessDaysUntil(dev,devDoneDate.Value.Date);
-                    ret = string.Format("{0},{5},{6},Checked,{1},days,{2},{3},{4}", Key, days, dev.ToShortDateString(), devDoneDate.Value.ToShortDateString(),toInDev.Count,IssueType,Summary);
+                    ret = string.Format("{0},{1},{2},{3},Checked,{4},days,{5},{6},{7}", Key, IssueType, Summary, EpicLinkKey, days, dev.ToShortDateString(), devDoneDate.Value.ToShortDateString(), toInDev.Count);
 
                 }
                 else if (toInDev.Count > 1)
@@ -269,7 +302,7 @@ namespace JiraCon
                     DateTime dev = toInDev[0];
 
                     double days = JHelper.BusinessDaysUntil(dev, devDoneDate.Value.Date);
-                    ret = string.Format("{0},{5},{6},NotSure,{1},days,{2},{3},{4}", Key, days, dev.ToShortDateString(), devDoneDate.Value.ToShortDateString(),toInDev.Count,IssueType,Summary);
+                    ret = string.Format("{0},{1},{2},{3},NotSure,{4},days,{5},{6},{7}", Key, IssueType,Summary,EpicLinkKey, days, dev.ToShortDateString(), devDoneDate.Value.ToShortDateString(),toInDev.Count);
                 }
 
 
@@ -367,7 +400,7 @@ namespace JiraCon
 
         }
 
-        public SortedDictionary<string,string[]> CustomFields
+        public List<JCustomField> CustomFields
         {
             get
             {
@@ -430,10 +463,12 @@ namespace JiraCon
         {
             List<T> ret = null;
 
-            if (_customFields.ContainsKey(customFieldName) && _customFields[customFieldName] != null)
+            var find = _customFields.Where(x => x.Id == customFieldName || x.Name == customFieldName).FirstOrDefault();
+
+            if (find != null)
             {
                 ret = new List<T>();
-                foreach (string s in _customFields[customFieldName])
+                foreach (string s in find.Values)
                 {
                     ret.Add(JHelper.GetValue<T>(s));
                 }
