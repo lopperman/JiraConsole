@@ -40,6 +40,14 @@ namespace JiraCon
 
         }
 
+        public string EpicLinkFieldName
+        {
+            get
+            {
+                return _epicLinkFieldKey;
+            }
+        }
+
         public Jira GetJira()
         {
             return _jira;
@@ -262,11 +270,25 @@ namespace JiraCon
 
             IssueSearchOptions searchOptions = new IssueSearchOptions(jql);
             searchOptions.FetchBasicFields = basicFields;
+
             searchOptions.MaxIssuesPerRequest = _jira.Issues.MaxIssuesPerRequest;
-            
+
+            if (additionalFields == null)
+            {
+                if (!string.IsNullOrWhiteSpace(_epicLinkFieldKey))
+                {
+                    additionalFields = new string[] { _epicLinkFieldKey };
+                }
+            }
+
             if (additionalFields != null)
             {
-                searchOptions.AdditionalFields = additionalFields.ToList();
+                var fldList = additionalFields.ToList();
+                if (!fldList.Contains(_epicLinkFieldKey))
+                {
+                    fldList.Add(_epicLinkFieldKey);
+                }
+                searchOptions.AdditionalFields = fldList;
             }
 
 
@@ -294,7 +316,14 @@ namespace JiraCon
 
         public List<Issue> GetIssues(string jql)
         {
-            return GetIssues(jql, true, "customfield_10015");        
+            if (!string.IsNullOrWhiteSpace(_epicLinkFieldKey))
+            {
+                return GetIssues(jql, true, _epicLinkFieldKey);
+            }
+            else
+            {
+                return GetIssues(jql, true);
+            }
         }
 
         /// <summary>

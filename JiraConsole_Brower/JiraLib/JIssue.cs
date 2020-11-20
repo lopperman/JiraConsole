@@ -47,6 +47,7 @@ namespace JiraCon
         public string ParentIssueKey { get; set; }
         public string IssueType { get; set; }
         public string Summary { get; set; }
+        public string ParentKey { get; set; }
 
         private void Initialize()
         {
@@ -85,6 +86,17 @@ namespace JiraCon
             }
             ParentIssueKey = _issue.ParentIssueKey;
             IssueType = _issue.Type.Name;
+
+            var epicLinkFieldName = JiraUtil.JiraRepo.EpicLinkFieldName;
+            if (!string.IsNullOrWhiteSpace(epicLinkFieldName))
+            {
+                var customFieldValues = GetCustomFieldValues<string>(epicLinkFieldName);
+                if (customFieldValues != null && customFieldValues.Count == 1)
+                {
+                    ParentKey = customFieldValues[0];
+                }
+            }
+
         }
 
         [JsonIgnore]
