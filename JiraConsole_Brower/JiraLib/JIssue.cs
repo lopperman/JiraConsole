@@ -20,7 +20,7 @@ namespace JiraCon
         }
     }
 
-    public class JIssue
+    public class JIssue:IComparable, IComparer<JIssue>
     {
         private Issue _issue = null;
 
@@ -106,6 +106,14 @@ namespace JiraCon
                 foreach (var cf in _issue.CustomFields)
                 {
                     _customFields.Add(new JCustomField(cf.Id, cf.Name, cf.Values));
+                }
+            }
+
+            if (_issue.Labels != null && _issue.Labels.Count > 0)
+            {
+                foreach (string child in _issue.Labels)
+                {
+                    _labels.Add(child);
                 }
             }
 
@@ -429,6 +437,21 @@ namespace JiraCon
 
         }
 
+        public string LabelsToString
+        {
+            get
+            {
+                string ret = "";
+
+                if (Labels != null && Labels.Count > 0)
+                {
+                    ret = string.Join("|", Labels);
+                }
+
+                return ret;
+            }
+        }
+
         public List<string> Labels
         {
             get
@@ -475,6 +498,18 @@ namespace JiraCon
             }
 
             return ret;
+        }
+
+        public int CompareTo(object obj)
+        {
+            JIssue other = (obj as JIssue);
+
+            return Key.CompareTo(other.Key);
+        }
+
+        public int Compare(JIssue x, JIssue y)
+        {
+            return x.Key.CompareTo(y.Key);
         }
 
         #endregion

@@ -129,9 +129,9 @@ namespace JiraCon
                     var catKey = catToken["key"].Value<string>();
                     var catName = catToken["name"].Value<string>();
 
-                    if (ret.Find(y=>y.StatusName == name)==null)
+                    if (!ret.Any(y=>y.StatusName.ToLower() == name.ToLower()))
                     {
-                        ret.Add(new JItemStatus(name, id, catKey, catName));
+                        ret.Add(new JItemStatus(name.ToLower(), id.ToLower(), catKey.ToLower(), catName.ToLower()));
                     }
 
                 }
@@ -420,12 +420,17 @@ namespace JiraCon
 
         public JItemStatus(string name, string id, string categoryKey, string categoryName)
         {
-            StatusName = name;
-            StatusId = id;
-            CategoryKey = categoryKey;
-            CategoryName = categoryName;
+            StatusName = name.ToLower();
+            StatusId = id.ToLower();
+            CategoryKey = categoryKey.ToLower();
+            CategoryName = categoryName.ToLower();
 
             if (categoryKey.ToLower() == "done")
+            {
+                CalendarWork = false;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "error")
             {
                 CalendarWork = false;
                 ActiveWork = false;

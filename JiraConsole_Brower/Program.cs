@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using Atlassian.Jira;
+using JConsole.Utilities;
 using Newtonsoft.Json;
 
 namespace JiraCon
@@ -190,6 +191,30 @@ namespace JiraCon
                 return true;
 
             }
+            else if (resp.Key == ConsoleKey.W)
+            {
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
+                var jql = Console.ReadLine();
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n***** {0}", jql));
+                ConsoleUtil.WriteLine("");
+                var keys = Console.ReadKey();
+                if (keys.Key == ConsoleKey.Y)
+                {
+                    ConsoleUtil.WriteLine("");
+                    ConsoleUtil.WriteLine("");
+
+                    CreateWorkMetricsFile(jql);
+
+                    ConsoleUtil.WriteLine("");
+                    ConsoleUtil.WriteLine("Press any key to continue.");
+                    Console.ReadKey();
+                }
+                return true;
+
+            }
+
             else if (resp.Key == ConsoleKey.I)
             {
                 ShowItemStatusConfig();
@@ -234,6 +259,75 @@ namespace JiraCon
                 ConsoleUtil.WriteLine(item.ToString());
             }
         }
+
+        private static void CreateWorkMetricsFile(string jql)
+        {
+            try
+            {
+                DateTime now = DateTime.Now;
+                string fileNameSuffix = string.Format("_{0:0000}{1}{2:00}_{3}.txt", now.Year, now.ToString("MMM"), now.Day, now.ToString("hhmmss"));
+
+                string workMetricsFile = String.Format("JiraCon_WorkMetrics_{0}", fileNameSuffix);
+
+                ConsoleUtil.WriteLine(string.Format("getting issues from JQL:{0}", Environment.NewLine));
+                ConsoleUtil.WriteLine(string.Format("{0}", jql));
+                ConsoleUtil.WriteLine("");
+
+                var issues = JiraUtil.JiraRepo.GetIssues(jql);
+
+                ConsoleUtil.WriteLine(string.Format("Retrieved {0} issues", issues.Count()));
+
+                List<JIssue> jissues = new List<JIssue>();
+
+                foreach (var issue in issues)
+                {
+                    ConsoleUtil.WriteLine(string.Format("getting changelogs for {0}", issue.Key.Value));
+                    JIssue newIssue = new JIssue(issue);
+                    newIssue.AddChangeLogs(JiraUtil.JiraRepo.GetIssueChangeLogs(issue));
+
+                    jissues.Add(newIssue);
+                }
+
+                var extractFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "JiraCon");
+                if (!Directory.Exists(extractFolder))
+                {
+                    Directory.CreateDirectory(extractFolder);
+                }
+
+                ConsoleUtil.WriteLine("Calculating work time metrics ...");
+
+                var metrics = new WorkMetrics(JiraUtil.JiraRepo);
+
+                using (StreamWriter writer = new StreamWriter(Path.Combine(extractFolder,workMetricsFile)))
+                {
+                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,testDays,testHours,includeForTimeCalc");
+                    foreach (JIssue j in jissues)
+                    {
+                        ConsoleUtil.WriteLine(string.Format("analyzing {0} - {1}", j.Key, j.IssueType));
+                        var workMetrics = metrics.AddIssue(j);
+                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,testDays,testHours,includeForTimeCalc");
+                        foreach (var wm in workMetrics)
+                        {
+                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TestTotalDays, wm.TestTotalHours,wm.IncludeForTimeCalc);
+                            writer.WriteLine(text);
+                            ConsoleUtil.WriteLine(text) ;
+                        }
+                    }
+
+                }
+
+                ConsoleUtil.WriteLine(string.Format("data has been written to {0}/{1}",extractFolder,workMetricsFile));
+
+
+            }
+            catch (Exception ex)
+            {
+                ConsoleUtil.WriteLine("*** An error has occurred ***", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine(ex.Message, ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine(ex.StackTrace, ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+            }
+        }
+
 
         private static void CreateExtractFiles(string jql, bool includeCommentsAndDesc)
         {

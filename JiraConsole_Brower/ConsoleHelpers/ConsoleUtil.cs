@@ -61,11 +61,12 @@ namespace JiraCon
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
             consoleLines.AddConsoleLine("----------");
-            consoleLines.AddConsoleLine("(M) Show Change History for 1 or more Cards");
-            consoleLines.AddConsoleLine("(J) Show JSON for 1 or more Cards");
-            consoleLines.AddConsoleLine("(E) Create extract files");
+            consoleLines.AddConsoleLine("(M) Show Change History for 1 or (M)ore Cards");
+            consoleLines.AddConsoleLine("(J) Show (J)SON for 1 or more Cards");
+            consoleLines.AddConsoleLine("(E) Create (E)xtract files");
+            consoleLines.AddConsoleLine("(W) Create (W)ork Metrics Analysis");
             consoleLines.AddConsoleLine("");
-            consoleLines.AddConsoleLine("(I) View Item Status values for time metrics");
+            consoleLines.AddConsoleLine("(I) View (I)tem Status values for work metrics");
             consoleLines.AddConsoleLine("(K) Re-create config file.");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }

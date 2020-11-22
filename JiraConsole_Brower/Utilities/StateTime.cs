@@ -1,70 +1,139 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JiraCon;
 
 namespace JConsole.Utilities
 {
 
-    public class JIssueStateMetrics
+    public class WorkMetrics
     {
-        private JStates _jStates = null;
+        private SortedList<JIssue, List<WorkMetric>> _workMetricList = new SortedList<JIssue, List<WorkMetric>>();
+        private JiraRepo _repo = null;
 
-        public JIssueStateMetrics(JStates jstates)
+        public WorkMetrics(JiraRepo repo)
         {
-            _jStates = jstates;
+            if (repo == null)
+            {
+                throw new NullReferenceException("class 'WorkMetrics' cannot be instantiated with a null JiraRepo object");
+            }
+            _repo = repo;
         }
 
-        
+        public SortedList<JIssue,List<WorkMetric>> GetWorkMetrics()
+        {
+            return _workMetricList;
+        }
+
+        public List<WorkMetric> AddIssue(JIssue issue)
+        {
+            var ret = BuildIssueMetrics(issue);
+            _workMetricList.Add(issue, ret);
+            return ret;
+        }
+
+        public void AddIssue(IEnumerable<JIssue> issues)
+        {
+            foreach (var iss in issues)
+            {
+                AddIssue(iss);
+            }
+        }
+
+        private List<WorkMetric> BuildIssueMetrics(JIssue issue)
+        {
+            var ret = new List<WorkMetric>();
+
+            SortedDictionary<DateTime, JItemStatus> statusStartList = new SortedDictionary<DateTime, JItemStatus>();
+
+            foreach (var changeLog in issue.ChangeLogs)
+            {
+                var items = changeLog.Items.Where(item => item.FieldName == "status");
+                foreach (JIssueChangeLogItem item in items)
+                {
+                    var itemStatus = _repo.JItemStatuses().SingleOrDefault(y=>y.StatusName == item.ToValue.ToLower());
+                    if (itemStatus == null)
+                    {
+                        ConsoleUtil.WriteLine(string.Format("Error getting JItemStatus for {0}.  Cannot determine calendar/active work time for state '{1}'", issue.Key, item.ToValue));
+                    }
+                    if (itemStatus == null)
+                    {
+                        itemStatus = new JItemStatus(item.ToValue.ToLower(), "ERROR", "ERROR", "ERROR");
+                    }
+                    statusStartList.Add(changeLog.CreatedDate, itemStatus);
+                }
+            }
+
+            if (statusStartList.Count == 0)
+            {
+                return ret;
+            }
+
+            var keys = statusStartList.Keys.ToList().OrderBy(x => x).ToList();
+
+            for (int i = 0; i < keys.Count; i ++)
+            {
+                //takes care of entries for first (if more than one item exists) and last
+                if (keys.Count == 1)
+                {
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now));
+                }
+                else if (i == keys.Count -1)
+                {
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i]));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now));
+                }
+                else if (i > 0)
+                {
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i]));
+                }
+            }
+
+            return ret;
+        }
 
     }
 
-
-    public class JStates
+    public class WorkMetric
     {
-        private List<JState> _states = new List<JState>();
+        public JItemStatus ItemStatus { get; set; }
+        public DateTime Start { get; set; }
+        public DateTime End { get; set; }
 
-        public List<JState> GetStates
+        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end)
+        {
+            ItemStatus = itemStatus;
+            Start = start;
+            End = end;            
+        }
+
+        public double TestTotalDays
         {
             get
             {
-                return _states;
+                return Math.Round(End.Subtract(Start).TotalDays, 2);
             }
         }
-
-        public void AddState(string stateName, bool activeWork, bool passiveWork)
+        public double TestTotalHours
         {
-            if (GetState(stateName)==null)
+            get
             {
-                _states.Add(new JState(stateName, activeWork, passiveWork));
+                return Math.Round(End.Subtract(Start).TotalHours, 1);
+            }
+        }
+        public bool IncludeForTimeCalc
+        {
+            get
+            {
+                return (ItemStatus.ActiveWork || ItemStatus.CalendarWork);
             }
         }
 
-        public JState GetState(string stateName)
-        {
-            return _states.FirstOrDefault(x => x.State.CompareTo(stateName) == 0);
-        }
+
+
+        //        public // what day/hour combination do we use?
     }
 
-    public class JState: IComparable<JState>
-    {
-        public JState()
-        {
-        }
 
-        public JState(string state, bool active, bool passive)
-        {
-            State = state;
-            Active = active;
-            Passive = passive;
-        }
 
-        public string State { get; set; }
-        public bool Active { get; set; }
-        public bool Passive{ get; set; }
-
-        public int CompareTo(JState other)
-        {
-            return string.Compare(this.State, other.State,true);
-        }
-    }
 }
