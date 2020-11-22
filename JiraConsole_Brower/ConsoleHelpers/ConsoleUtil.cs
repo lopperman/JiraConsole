@@ -65,6 +65,7 @@ namespace JiraCon
             consoleLines.AddConsoleLine("(J) Show JSON for 1 or more Cards");
             consoleLines.AddConsoleLine("(E) Create extract files");
             consoleLines.AddConsoleLine("");
+            consoleLines.AddConsoleLine("(I) View Item Status values for time metrics");
             consoleLines.AddConsoleLine("(K) Re-create config file.");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }

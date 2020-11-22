@@ -14,7 +14,7 @@ namespace JiraCon
             }
             catch (Exception ex)
             {
-                throw new Exception(string.Format("Unable to convert '{0}' to Type: {1}", value, typeof(T).FullName));
+                throw new Exception(string.Format("Unable to convert '{0}' to Type: {1}\r\n\r\n{2}", value, typeof(T).FullName,ex.Message));
             }
         }
 

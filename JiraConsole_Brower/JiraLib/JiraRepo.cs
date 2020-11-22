@@ -17,6 +17,7 @@ namespace JiraCon
 
         private List<JField> _fieldList = new List<JField>();
         private string _epicLinkFieldKey = string.Empty;
+        private List<JItemStatus> _itemStatuses = null;
 
         public JiraRepo(string server, string userName, string password)
         {
@@ -38,6 +39,13 @@ namespace JiraCon
                 _epicLinkFieldKey = jField.Key;
             }
 
+            _itemStatuses = GetItemStatuses();
+
+        }
+
+        public List<JItemStatus> JItemStatuses()
+        {
+            return _itemStatuses;
         }
 
         public string EpicLinkFieldName
@@ -99,15 +107,49 @@ namespace JiraCon
         public List<IssueStatus> GetIssueTypeStatuses(string projKey, string issueType)
         {
 
-
             return GetIssueTypeStatusesAsync(projKey, issueType).GetAwaiter().GetResult().ToList();
+        }
+
+        private List<JItemStatus> GetItemStatuses()
+        {
+            var ret = new List<JItemStatus>();
+
+            string data = GetItemStatusesAsync().GetAwaiter().GetResult();
+
+            JArray json = JArray.Parse(data);
+
+            for (int i = 0; i < json.Count; i++)
+            {
+                try
+                {
+                    JToken j = json[i];
+                    var id = j["id"].Value<string>();
+                    var name = j["name"].Value<string>();
+                    var catToken = j["statusCategory"].Value<JToken>();
+                    var catKey = catToken["key"].Value<string>();
+                    var catName = catToken["name"].Value<string>();
+
+                    if (ret.Find(y=>y.StatusName == name)==null)
+                    {
+                        ret.Add(new JItemStatus(name, id, catKey, catName));
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(ex.StackTrace);
+                }
+            }
+
+            return ret;
         }
 
         public List<JField> GetFields()
         {
-            var ret = GetFieldsAsync().GetAwaiter().GetResult().ToList();
+            var ret = new List<JField>();
 
-            string data = ret[0].Name;
+            string data = GetFieldsAsync().GetAwaiter().GetResult();
 
             JArray json = JArray.Parse(data);
 
@@ -122,55 +164,31 @@ namespace JiraCon
                 }
                 catch (Exception ex)
                 {
-                    //but keep on going1
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(ex.StackTrace);
                 }
             }
 
-
             return ret;
         }
 
-        public async Task<List<JField>>GetFieldsAsync(CancellationToken token = default(CancellationToken))
+        private async Task<string>GetFieldsAsync(CancellationToken token = default(CancellationToken))
         {
-            var ret = new List<JField>();
-
-
             var resourceUrl = String.Format("rest/api/3/field");
-            var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
             var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
                 .ConfigureAwait(false);
-            
-            ret.Add(new JField("text", response.ToString()));
 
-            //JToken fields = response["values"];
-
-            //if (fields != null)
-            //{
-            //    var items = fields.Select(cl => JsonConvert.DeserializeObject(cl.ToString(), serializerSettings));
-            //}
-
-            return ret;
+            return response.ToString();
         }
 
-        //public async Task<List<JField>> GetFieldsAsync(CancellationToken token = default(CancellationToken))
-        //{
-        //    var ret = new List<JField>();
+        private async Task<string> GetItemStatusesAsync(CancellationToken token = default(CancellationToken))
+        {
+            var resourceUrl = String.Format("rest/api/3/status");
+            var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
+                .ConfigureAwait(false);
 
-
-        //    var resourceUrl = String.Format("rest/api/3/field");
-        //    var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
-        //    var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
-        //        .ConfigureAwait(false);
-
-        //    JToken fields = response["values"];
-
-        //    if (fields != null)
-        //    {
-        //        var items = fields.Select(cl => JsonConvert.DeserializeObject(cl.ToString(), serializerSettings));
-        //    }
-
-        //    return ret;
-        //}
+            return response.ToString();
+        }
 
 
         public async Task<List<IssueStatus>> GetIssueTypeStatusesAsync(string projKey, string issueType, CancellationToken token = default(CancellationToken))
@@ -389,6 +407,96 @@ namespace JiraCon
 
         }
 
+    }
+
+    public class JItemStatus
+    {
+        public string StatusName { get; set; }
+        public string StatusId  { get; set; }
+        public string CategoryKey { get; set; }
+        public string CategoryName { get; set; }
+        public bool CalendarWork { get; set; }
+        public bool ActiveWork { get; set; }
+
+        public JItemStatus(string name, string id, string categoryKey, string categoryName)
+        {
+            StatusName = name;
+            StatusId = id;
+            CategoryKey = categoryKey;
+            CategoryName = categoryName;
+
+            if (categoryKey.ToLower() == "done")
+            {
+                CalendarWork = false;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "undefined")
+            {
+                CalendarWork = false;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "new")
+            {
+                CalendarWork = false;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "ready for release")
+            {
+                CalendarWork = false;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "on hold")
+            {
+                CalendarWork = true;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "to be prioritized")
+            {
+                CalendarWork = false;
+                ActiveWork = false;
+            }
+            else
+            {
+                CalendarWork = true;
+                ActiveWork = GetIsActiveWorkState(name);
+            }
+
+        }
+
+        private bool GetIsActiveWorkState(string name)
+        {
+            name = name.ToLower();
+
+            List<string> activeStates = new List<string>();
+            activeStates.Add("in review");
+            activeStates.Add("dev in flight");
+            activeStates.Add("dev testing");
+            activeStates.Add("developer review");
+            activeStates.Add("qa test");
+            activeStates.Add("in qa");
+            activeStates.Add("in development");
+            activeStates.Add("in design");
+            activeStates.Add("in progress");
+            activeStates.Add("qa");
+            activeStates.Add("in dev");
+            activeStates.Add("code review");
+            activeStates.Add("in code review");
+            activeStates.Add("verifying");
+            activeStates.Add("grubhub verification");
+            activeStates.Add("in uat");
+            activeStates.Add("team qa");
+            activeStates.Add("");
+            activeStates.Add("");
+            activeStates.Add("");
+
+            return activeStates.Contains(name);
+
+        }
+
+        public override string ToString()
+        {
+            return string.Format("name: {0}, id: {1}, categoryKey: {2}, categoryName: {3}, Active Work: {4}, Calendar Work: {5}", StatusName, StatusId, CategoryKey, CategoryName,ActiveWork,CalendarWork);
+        }
     }
 
     public class JField

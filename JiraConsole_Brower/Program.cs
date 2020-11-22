@@ -190,6 +190,15 @@ namespace JiraCon
                 return true;
 
             }
+            else if (resp.Key == ConsoleKey.I)
+            {
+                ShowItemStatusConfig();
+
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine("Press any key to continue.");
+                Console.ReadKey();
+                return true;
+            }
             else if (resp.Key == ConsoleKey.J)
             {
 
@@ -215,6 +224,15 @@ namespace JiraCon
                 return false;
             }
             return false;
+        }
+
+        private static void ShowItemStatusConfig()
+        {
+            List<JItemStatus> ordered = JiraUtil.JiraRepo.JItemStatuses().OrderBy(x => x.StatusName).ToList();
+            foreach (JItemStatus item in ordered)
+            {
+                ConsoleUtil.WriteLine(item.ToString());
+            }
         }
 
         private static void CreateExtractFiles(string jql, bool includeCommentsAndDesc)
