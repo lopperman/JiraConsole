@@ -160,7 +160,7 @@ namespace JiraCon
                 Console.ReadKey();
                 return true;
             }
-            else if (resp.Key == ConsoleKey.E)
+            else if (resp.Key == ConsoleKey.X)
             {
                 
                 ConsoleUtil.WriteLine("");

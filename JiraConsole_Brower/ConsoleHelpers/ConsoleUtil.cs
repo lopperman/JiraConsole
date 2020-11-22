@@ -63,7 +63,7 @@ namespace JiraCon
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("(M) Show Change History for 1 or (M)ore Cards");
             consoleLines.AddConsoleLine("(J) Show (J)SON for 1 or more Cards");
-            consoleLines.AddConsoleLine("(E) Create (E)xtract files");
+            consoleLines.AddConsoleLine("(X) Create E(X)tract files");
             consoleLines.AddConsoleLine("(W) Create (W)ork Metrics Analysis");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("(I) View (I)tem Status values for work metrics");
