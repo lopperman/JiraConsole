@@ -226,15 +226,61 @@ namespace JiraCon
                 ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
                 var jql = Console.ReadLine();
                 ConsoleUtil.WriteLine("");
-                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n***** {0}", jql));
+                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use this JQL:  {0}", jql));
                 ConsoleUtil.WriteLine("");
                 var keys = Console.ReadKey();
+
+                int startHour = 7;
+                int endHour = 18;
+
                 if (keys.Key == ConsoleKey.Y)
                 {
-                    ConsoleUtil.WriteLine("");
+                    while(true)
+                    {
+                        ConsoleUtil.WriteLine("Enter (Y) to change the defaults for business hours? (7AM-6PM)");
+                        keys = Console.ReadKey();
+                        ConsoleUtil.WriteLine("");
+
+                        try
+                        {
+                            if (keys.Key == ConsoleKey.Y)
+                            {
+                                ConsoleUtil.WriteLine("Enter Hour for Business Start (0-23)");
+                                string read = Console.ReadLine();
+                                int start = Convert.ToInt32(read);
+
+                                ConsoleUtil.WriteLine("Enter Hour for Business End (0-23)");
+                                read = Console.ReadLine();
+                                int end = Convert.ToInt32(read);
+
+                                if (end > start)
+                                {
+                                    ConsoleUtil.WriteLine(string.Format("Enter (Y) to use {0} to {1} as business hours?",start,end));
+                                    keys = Console.ReadKey();
+                                    if (keys.Key == ConsoleKey.Y)
+                                    {
+                                        startHour = start;
+                                        endHour = end;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+
+                        }
+                        catch
+                        {
+                            startHour = 7;
+                            endHour = 18;
+                        }
+
+                    }
                     ConsoleUtil.WriteLine("");
 
-                    CreateWorkMetricsFile(jql);
+                    CreateWorkMetricsFile(jql,startHour,endHour);
 
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
@@ -292,7 +338,7 @@ namespace JiraCon
             }
         }
 
-        private static void CreateWorkMetricsFile(string jql)
+        private static void CreateWorkMetricsFile(string jql, int startHour, int endHour)
         {
             try
             {
@@ -328,19 +374,20 @@ namespace JiraCon
 
                 ConsoleUtil.WriteLine("Calculating work time metrics ...");
 
-                var metrics = new WorkMetrics(JiraUtil.JiraRepo);
+                var metrics = new WorkMetrics(JiraUtil.JiraRepo,startHour,endHour);
+
 
                 using (StreamWriter writer = new StreamWriter(Path.Combine(extractFolder,workMetricsFile)))
                 {
-                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,EincludeForTimeCalc");
+                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,totalBusinessDays,totalBusinessHours,transitionAfterHours,EincludeForTimeCalc");
                     foreach (JIssue j in jissues)
                     {
                         ConsoleUtil.WriteLine(string.Format("analyzing {0} - {1}", j.Key, j.IssueType));
                         var workMetrics = metrics.AddIssue(j);
-                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,EincludeForTimeCalc");
+                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,totalBusinessDays,totalBusinessHours,transitionAfterHours,EincludeForTimeCalc");
                         foreach (var wm in workMetrics)
                         {
-                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TotalDays, wm.TotalHours,wm.TotalWeekdays,wm.TotalWeekdayHours,wm.IncludeForTimeCalc);
+                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TotalDays, wm.TotalHours,wm.TotalWeekdays,wm.TotalWeekdayHours,wm.TotalBusinessDays,wm.TotalBusinessHours,wm.TransitionAfterHours,wm.IncludeForTimeCalc);
                             writer.WriteLine(text);
                             ConsoleUtil.WriteLine(text) ;
                         }
@@ -349,7 +396,6 @@ namespace JiraCon
                 }
 
                 ConsoleUtil.WriteLine(string.Format("data has been written to {0}/{1}",extractFolder,workMetricsFile));
-
 
             }
             catch (Exception ex)

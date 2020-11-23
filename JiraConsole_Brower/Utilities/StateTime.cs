@@ -10,14 +10,21 @@ namespace JConsole.Utilities
     {
         private SortedList<JIssue, List<WorkMetric>> _workMetricList = new SortedList<JIssue, List<WorkMetric>>();
         private JiraRepo _repo = null;
+        private int _startHour = 0;
+        private int _endHour = 0;
+           
 
-        public WorkMetrics(JiraRepo repo)
+        public WorkMetrics(JiraRepo repo, int startHour, int endHour)
         {
+
             if (repo == null)
             {
                 throw new NullReferenceException("class 'WorkMetrics' cannot be instantiated with a null JiraRepo object");
             }
             _repo = repo;
+
+            _startHour = startHour;
+            _endHour = endHour;
         }
 
         public SortedList<JIssue,List<WorkMetric>> GetWorkMetrics()
@@ -84,16 +91,16 @@ namespace JConsole.Utilities
                 //takes care of entries for first (if more than one item exists) and last
                 if (keys.Count == 1)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now,_startHour,_endHour));
                 }
                 else if (i == keys.Count -1)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i]));
-                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now));
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now, _startHour, _endHour));
                 }
                 else if (i > 0)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i]));
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour));
                 }
             }
 
@@ -107,12 +114,25 @@ namespace JConsole.Utilities
         public JItemStatus ItemStatus { get; set; }
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
+        public int StartHour { get; set; }
+        public int EndHour { get; set; }
 
-        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end)
+        //public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end)
+        //{
+        //    ItemStatus = itemStatus;
+        //    Start = start;
+        //    End = end;
+        //    StartHour = 7;
+        //    EndHour = 18;
+        //}
+
+        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end, int startHour, int endHour)
         {
             ItemStatus = itemStatus;
             Start = start;
-            End = end;            
+            End = end;
+            StartHour = startHour;
+            EndHour = endHour;
         }
 
         public double TotalDays
@@ -147,6 +167,29 @@ namespace JConsole.Utilities
             }
         }
 
+        public double TotalBusinessDays
+        {
+            get
+            {
+                return Math.Round((RemoveWeekendsAndAfterHours(Start, End).TotalHours/ (EndHour-StartHour)), 2);
+            }
+        }
+
+        public double TotalBusinessHours
+        {
+            get
+            {
+                return Math.Round(RemoveWeekendsAndAfterHours(Start, End).TotalHours, 2);
+            }
+        }
+
+        public bool TransitionAfterHours
+        {
+            get
+            {
+                return (Start.Hour < StartHour || Start.Hour > EndHour || End.Hour > EndHour || End.Hour < StartHour);
+            }
+        }
 
         public bool IncludeForTimeCalc
         {
@@ -174,6 +217,27 @@ namespace JConsole.Utilities
             return ts;
         }
 
+        public TimeSpan RemoveWeekendsAndAfterHours(DateTime start, DateTime end)
+        {
+            TimeSpan ts = end.Subtract(start);
+
+            for (DateTime d = start; d < end; d = d.AddMinutes(5))
+            {
+                if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    if (ts.TotalMinutes > 5)
+                    {
+                        ts -= TimeSpan.FromMinutes(5);
+                    }
+                }
+                else if (d.Hour < StartHour || d.Hour > EndHour)
+                {
+                    ts -= TimeSpan.FromMinutes(5);
+                }
+            }
+
+            return ts;
+        }
 
 
         //        public // what day/hour combination do we use?
