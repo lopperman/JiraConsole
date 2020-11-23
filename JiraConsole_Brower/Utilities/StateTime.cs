@@ -51,10 +51,14 @@ namespace JConsole.Utilities
                 var items = changeLog.Items.Where(item => item.FieldName == "status");
                 foreach (JIssueChangeLogItem item in items)
                 {
-                    var itemStatus = _repo.JItemStatuses.SingleOrDefault(y=>y.StatusName == item.ToValue.ToLower());
+                    var itemStatus = _repo.JItemStatuses.SingleOrDefault(y=>y.StatusName.ToLower() == item.ToValue.ToLower());
                     if (itemStatus == null)
                     {
-                        ConsoleUtil.WriteLine(string.Format("Error getting JItemStatus for {0}.  Cannot determine calendar/active work time for state '{1}'", issue.Key, item.ToValue));
+                        var err = string.Format("Error getting JItemStatus for {0} ({1}).  Cannot determine calendar/active work time for state '{2}'", issue.Key, issue.IssueType, item.ToValue);
+                        ConsoleUtil.WriteLine(err,ConsoleColor.DarkRed,ConsoleColor.Gray,false);
+                        ConsoleUtil.WriteLine("If issue type is an Epic then you should be ok. PRESS ANY KEY TO CONTINUE", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                        var ok = Console.ReadKey();
+
                     }
                     if (itemStatus == null)
                     {

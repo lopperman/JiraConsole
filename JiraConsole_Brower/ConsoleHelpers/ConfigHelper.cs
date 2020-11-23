@@ -108,7 +108,7 @@ namespace JiraCon
             //foreach (var jis in JiraUtil.JiraRepo.JItemStatuses.OrderBy(xx=>xx.StatusName))
             //{
             //     ConsoleUtil.WriteLine(string.Format("{0},{1},{2},{3},{4},{5}",jis.StatusName, jis.StatusId, jis.CategoryKey, jis.CategoryName, jis.CalendarWork, jis.ActiveWork));
-            //}
+            //} 
 
 
             ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE");
