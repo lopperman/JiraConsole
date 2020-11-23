@@ -24,7 +24,7 @@ namespace JiraCon
             if (!File.Exists(path))
             {
                 ConsoleUtil.WriteLine("Missing config file: " + path, ConsoleColor.Red, ConsoleColor.Gray, false);
-                ConsoleUtil.WriteLine("File will be generated but you will need to set 'CalendarWork' and 'ActiveWork' to the appropriate values for your environment.",ConsoleColor.Red, ConsoleColor.Gray, false);
+                ConsoleUtil.WriteLine("File will be generated with defaults but you will need to verify 'CalendarWork' and 'ActiveWork' in file: " + path,ConsoleColor.Red, ConsoleColor.Gray, false);
                 ConsoleUtil.WriteLine("Press any key to continue");
                 var ok = Console.ReadKey();
 
@@ -69,9 +69,11 @@ namespace JiraCon
 
         internal static void ViewAll()
         {
+
             ConsoleTable table = null;
 
-            ConsoleUtil.WriteLine("********** LOGIN CONFIG **********", ConsoleColor.Yellow, ConsoleColor.Black, true);
+            ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine("********** LOGIN CONFIG **********", ConsoleColor.Yellow, ConsoleColor.Black, false);
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine(string.Format("Path = {0}",Path.Combine(personalFolder,configFileName)));
 
@@ -82,11 +84,16 @@ namespace JiraCon
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine("********** END LOGIN CONFIG ******", ConsoleColor.Yellow, ConsoleColor.Black, false);
             ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE");
+            var ok = Console.ReadKey();
 
 
             ConsoleUtil.WriteLine("********** ISSUE STATUS TIME METRICS CONFIG *********", ConsoleColor.Yellow, ConsoleColor.Black, false);
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine("All issue statuses. These are determined automatically via the Issue Status Cagetory from Jira, unless otherwise annotated. To add or remove overrides, use the Config menu option for 'Override Issue Status Time Metrics'.");
+            ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine(string.Format("Path = {0}", Path.Combine(personalFolder, configIssueStatus)));
+
             table = new ConsoleTable("Name","Category Key/Name","CalendarWork","ActiveWork");
             foreach (var jis in JiraUtil.JiraRepo.JItemStatuses)
             {
@@ -104,9 +111,8 @@ namespace JiraCon
             //}
 
 
-            ConsoleUtil.WriteLine("");
-            ConsoleUtil.WriteLine("Press any key to continue");
-            var done = Console.ReadKey();
+            ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE");
+            ok = Console.ReadKey();
         }
 
         internal static JiraConfiguration BuildConfig(string[] args)
