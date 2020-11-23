@@ -69,29 +69,39 @@ namespace JiraCon
 
         internal static void ViewAll()
         {
-            ConsoleUtil.WriteLine("***** LOGIN CONFIG *****", ConsoleColor.Yellow, ConsoleColor.Black, true);
+            ConsoleTable table = null;
+
+            ConsoleUtil.WriteLine("********** LOGIN CONFIG **********", ConsoleColor.Yellow, ConsoleColor.Black, true);
+            ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine(string.Format("Path = {0}",Path.Combine(personalFolder,configFileName)));
 
             var loginArr = GetConfig();
-            ConsoleUtil.WriteLine(string.Join("  --  ", loginArr));
-            ConsoleUtil.WriteLine("************************", ConsoleColor.Yellow, ConsoleColor.Black, false);
+            table = new ConsoleTable("loginName", "apiKey", "Jira Base Url");
+            table.AddRow(loginArr[0], loginArr[1], loginArr[2]);
+            table.Write();
+            ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine("********** END LOGIN CONFIG ******", ConsoleColor.Yellow, ConsoleColor.Black, false);
             ConsoleUtil.WriteLine("");
 
-            ConsoleUtil.WriteLine("***** ISSUE STATUS TIME METRICS CONFIG *****", ConsoleColor.Yellow, ConsoleColor.Black, false);
+
+            ConsoleUtil.WriteLine("********** ISSUE STATUS TIME METRICS CONFIG *********", ConsoleColor.Yellow, ConsoleColor.Black, false);
+            ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine("All issue statuses. These are determined automatically via the Issue Status Cagetory from Jira, unless otherwise annotated. To add or remove overrides, use the Config menu option for 'Override Issue Status Time Metrics'.");
-            var table = new ConsoleTable("Name","Category Key/Name","CalendarWork","ActiveWork");
+            table = new ConsoleTable("Name","Category Key/Name","CalendarWork","ActiveWork");
             foreach (var jis in JiraUtil.JiraRepo.JItemStatuses)
             {
                 table.AddRow(jis.StatusName, string.Format("{0}/{1}",jis.CategoryKey, jis.CategoryName), jis.CalendarWork, jis.ActiveWork);
             }
             table.Write();
-            ConsoleUtil.WriteLine("********************************************", ConsoleColor.Yellow, ConsoleColor.Black, false);
+            ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine("********** END ISSUE STATUS TIME METRICS CONFIG *****", ConsoleColor.Yellow, ConsoleColor.Black, false);
+            ConsoleUtil.WriteLine("");
 
-            ConsoleUtil.WriteLine("statusName,statusId,categoryKey,categoryName,calendartWork,activeWork");
-            foreach (var jis in JiraUtil.JiraRepo.JItemStatuses.OrderBy(xx=>xx.StatusName))
-            {
-                 ConsoleUtil.WriteLine(string.Format("{0},{1},{2},{3},{4},{5}",jis.StatusName, jis.StatusId, jis.CategoryKey, jis.CategoryName, jis.CalendarWork, jis.ActiveWork));
-            }
+            //ConsoleUtil.WriteLine("statusName,statusId,categoryKey,categoryName,calendartWork,activeWork");
+            //foreach (var jis in JiraUtil.JiraRepo.JItemStatuses.OrderBy(xx=>xx.StatusName))
+            //{
+            //     ConsoleUtil.WriteLine(string.Format("{0},{1},{2},{3},{4},{5}",jis.StatusName, jis.StatusId, jis.CategoryKey, jis.CategoryName, jis.CalendarWork, jis.ActiveWork));
+            //}
 
 
             ConsoleUtil.WriteLine("");
