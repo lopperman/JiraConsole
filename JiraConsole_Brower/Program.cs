@@ -379,15 +379,15 @@ namespace JiraCon
 
                 using (StreamWriter writer = new StreamWriter(Path.Combine(extractFolder,workMetricsFile)))
                 {
-                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,totalBusinessDays,totalBusinessHours,transitionAfterHours,EincludeForTimeCalc");
+                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,totalBusinessDays,totalBusinessHours,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
                     foreach (JIssue j in jissues)
                     {
                         ConsoleUtil.WriteLine(string.Format("analyzing {0} - {1}", j.Key, j.IssueType));
-                        var workMetrics = metrics.AddIssue(j);
-                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,totalBusinessDays,totalBusinessHours,transitionAfterHours,EincludeForTimeCalc");
+                        var workMetrics = metrics.AddIssue(j, jissues);
+                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,totalBusinessDays,totalBusinessHours,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
                         foreach (var wm in workMetrics)
                         {
-                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TotalDays, wm.TotalHours,wm.TotalWeekdays,wm.TotalWeekdayHours,wm.TotalBusinessDays,wm.TotalBusinessHours,wm.TransitionAfterHours,wm.IncludeForTimeCalc);
+                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TotalDays, wm.TotalHours,wm.TotalWeekdays,wm.TotalWeekdayHours,wm.TotalBusinessDays,wm.TotalBusinessHours,wm.Total8HourAdjBusinessHours,wm.TransitionAfterHours,wm.Exclude,wm.ExcludeReasons);
                             writer.WriteLine(text);
                             ConsoleUtil.WriteLine(text) ;
                         }

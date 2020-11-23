@@ -32,22 +32,22 @@ namespace JConsole.Utilities
             return _workMetricList;
         }
 
-        public List<WorkMetric> AddIssue(JIssue issue)
+        public List<WorkMetric> AddIssue(JIssue issue, List<JIssue> jIssues)
         {
-            var ret = BuildIssueMetrics(issue);
+            var ret = BuildIssueMetrics(issue, jIssues);
             _workMetricList.Add(issue, ret);
             return ret;
         }
 
-        public void AddIssue(IEnumerable<JIssue> issues)
+        public void AddIssue(List<JIssue> issues)
         {
             foreach (var iss in issues)
             {
-                AddIssue(iss);
+                AddIssue(iss,issues);
             }
         }
 
-        private List<WorkMetric> BuildIssueMetrics(JIssue issue)
+        private List<WorkMetric> BuildIssueMetrics(JIssue issue, List<JIssue> jIssues)
         {
             var ret = new List<WorkMetric>();
 
@@ -91,16 +91,16 @@ namespace JConsole.Utilities
                 //takes care of entries for first (if more than one item exists) and last
                 if (keys.Count == 1)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now,_startHour,_endHour));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now,_startHour,_endHour, issue,jIssues));
                 }
                 else if (i == keys.Count -1)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour));
-                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now, _startHour, _endHour));
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour, issue, jIssues));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now, _startHour, _endHour, issue, jIssues));
                 }
                 else if (i > 0)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour));
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour, issue, jIssues));
                 }
             }
 
@@ -117,6 +117,35 @@ namespace JConsole.Utilities
         public int StartHour { get; set; }
         public int EndHour { get; set; }
 
+        public bool Exclude
+        {
+            get
+            {
+                return _excludeReasons != null && _excludeReasons.Length > 0;
+            }
+        }
+        private string _excludeReasons = string.Empty;
+
+        public string ExcludeReasons
+        {
+            get
+            {
+                return _excludeReasons;
+            }
+        }
+
+        private void AddExclusion(string reason)
+        {
+            if (_excludeReasons.Length == 0)
+            {
+                _excludeReasons = reason;
+            }
+            else
+            {
+                _excludeReasons = string.Format("{0}; {1}", _excludeReasons, reason);
+            }
+        }
+
         //public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end)
         //{
         //    ItemStatus = itemStatus;
@@ -126,13 +155,50 @@ namespace JConsole.Utilities
         //    EndHour = 18;
         //}
 
-        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end, int startHour, int endHour)
+        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end, int startHour, int endHour, JIssue issue, List<JIssue> issues)
         {
             ItemStatus = itemStatus;
             Start = start;
             End = end;
             StartHour = startHour;
             EndHour = endHour;
+
+            CalculateExclusions(issue, issues);
+        }
+
+
+
+        public void CalculateExclusions(JIssue issue, List<JIssue> issues)
+        {
+            if (!IncludeForTimeCalc)
+            {
+                AddExclusion("Non-working Status");
+            }
+            //TODO:  make these labels configurable
+            if (issue.Labels != null && issue.Labels.Count > 0)
+            {
+                foreach (string label in issue.Labels)
+                {
+                    if (label.ToLower().Contains("jm") || label.ToLower().Contains("jm-work") || label.ToLower().Contains("jm_work") || label.ToLower().Contains("jmwork"))
+                    {
+                        AddExclusion("JM Work");
+                        break;
+                    }
+                }
+            }
+            //check if parent of sub-tasks
+            if (issue.IssueType.ToLower() == "epic")
+            {
+                AddExclusion("Issue Type = Epic");
+            }
+
+            int childrenSubTasks = issues.Count(x => x.ParentIssueKey != null && x.ParentIssueKey.ToLower() == issue.Key.ToLower() && (x.IssueType.ToLower() == "sub-task" || x.IssueType.ToLower() == "subtask"));
+            if (childrenSubTasks > 0)
+            {
+                AddExclusion(string.Format("Has {0} sub-tasks", childrenSubTasks));
+            }
+
+
         }
 
         public double TotalDays
@@ -180,6 +246,22 @@ namespace JConsole.Utilities
             get
             {
                 return Math.Round(RemoveWeekendsAndAfterHours(Start, End).TotalHours, 2);
+            }
+        }
+
+        public double Total8HourAdjBusinessHours
+        {
+            get
+            {
+                //cannnot have more than 8 hours * #business days
+                double avgBusHOurs = TotalBusinessHours / TotalBusinessDays;
+                if (avgBusHOurs > 8 && (EndHour - StartHour) > 8)
+                {
+                    var over8Hours = (EndHour - StartHour) - 8;
+                    double adjPerc = 1 - (over8Hours / avgBusHOurs);
+                    return Math.Round(TotalBusinessHours * adjPerc);
+                }
+                return TotalBusinessHours;
             }
         }
 
