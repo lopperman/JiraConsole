@@ -479,6 +479,26 @@ namespace JiraCon
                 CalendarWork = false;
                 ActiveWork = false;
             }
+            else if (categoryKey.ToLower() == "ready for acceptance testing")
+            {
+                CalendarWork = true;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "acceptance testing")
+            {
+                CalendarWork = true;
+                ActiveWork = true;
+            }
+            else if (categoryKey.ToLower() == "resolving dependencies")
+            {
+                CalendarWork = true;
+                ActiveWork = false;
+            }
+            else if (categoryKey.ToLower() == "epic uat")
+            {
+                CalendarWork = true;
+                ActiveWork = false;
+            }
             else
             {
                 CalendarWork = true;
