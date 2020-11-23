@@ -332,15 +332,15 @@ namespace JiraCon
 
                 using (StreamWriter writer = new StreamWriter(Path.Combine(extractFolder,workMetricsFile)))
                 {
-                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,testDays,testHours,includeForTimeCalc");
+                    writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,EincludeForTimeCalc");
                     foreach (JIssue j in jissues)
                     {
                         ConsoleUtil.WriteLine(string.Format("analyzing {0} - {1}", j.Key, j.IssueType));
                         var workMetrics = metrics.AddIssue(j);
-                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,testDays,testHours,includeForTimeCalc");
+                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,elapsedDays,elapsedHours,elapsedWeekdays,elapsedWeekdayHours,EincludeForTimeCalc");
                         foreach (var wm in workMetrics)
                         {
-                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TestTotalDays, wm.TestTotalHours,wm.IncludeForTimeCalc);
+                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}", j.Key, j.IssueType,j.Summary,j.EpicLinkKey,j.ParentIssueKey, j.StatusName, j.LabelsToString, wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork, wm.TotalDays, wm.TotalHours,wm.TotalWeekdays,wm.TotalWeekdayHours,wm.IncludeForTimeCalc);
                             writer.WriteLine(text);
                             ConsoleUtil.WriteLine(text) ;
                         }

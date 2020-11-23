@@ -56,8 +56,12 @@ namespace JConsole.Utilities
                     {
                         var err = string.Format("Error getting JItemStatus for {0} ({1}).  Cannot determine calendar/active work time for state '{2}'", issue.Key, issue.IssueType, item.ToValue);
                         ConsoleUtil.WriteLine(err,ConsoleColor.DarkRed,ConsoleColor.Gray,false);
-                        ConsoleUtil.WriteLine("If issue type is an Epic then you should be ok. PRESS ANY KEY TO CONTINUE", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
-                        var ok = Console.ReadKey();
+                        ConsoleUtil.WriteLine("If issue type is an Epic then you should be ok.", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                        if (issue.IssueType.ToLower() != "epic")
+                        {
+                            ConsoleUtil.WriteLine("If issue type is an Epic then you should be ok. PRESS ANY KEY TO CONTINUE", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                            var ok = Console.ReadKey();
+                        }
 
                     }
                     if (itemStatus == null)
@@ -111,26 +115,63 @@ namespace JConsole.Utilities
             End = end;            
         }
 
-        public double TestTotalDays
+        public double TotalDays
         {
             get
             {
                 return Math.Round(End.Subtract(Start).TotalDays, 2);
             }
         }
-        public double TestTotalHours
+        public double TotalHours
         {
             get
             {
                 return Math.Round(End.Subtract(Start).TotalHours, 1);
             }
         }
+
+
+        public double TotalWeekdays
+        {
+            get
+            {
+                return Math.Round(RemoveWeekends(Start, End).TotalDays,2);
+            }
+        }
+
+        public double TotalWeekdayHours
+        {
+            get
+            {
+                return Math.Round(RemoveWeekends(Start, End).TotalHours, 2);
+            }
+        }
+
+
         public bool IncludeForTimeCalc
         {
             get
             {
                 return (ItemStatus.ActiveWork || ItemStatus.CalendarWork);
             }
+        }
+
+        public TimeSpan RemoveWeekends(DateTime start, DateTime end)
+        {
+            TimeSpan ts = end.Subtract(start);
+
+            for (DateTime d = start; d < end; d = d.AddMinutes(5))
+            {
+                if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    if (ts.TotalMinutes > 5)
+                    {
+                        ts -= TimeSpan.FromMinutes(5);
+                    }
+                }
+            }
+
+            return ts;
         }
 
 
