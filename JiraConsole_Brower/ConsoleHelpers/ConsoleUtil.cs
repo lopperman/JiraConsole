@@ -67,9 +67,22 @@ namespace JiraCon
             consoleLines.AddConsoleLine("(W) Create (W)ork Metrics Analysis");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("(I) View (I)tem Status values for work metrics");
-            consoleLines.AddConsoleLine("(K) Re-create config file.");
+            consoleLines.AddConsoleLine("(C) Config Menu");
             consoleLines.AddConsoleLine("Enter selection or E to exit.");
         }
+
+        public static void BuildConfigMenu()
+        {
+            consoleLines.AddConsoleLine("----------");
+            consoleLines.AddConsoleLine("Config Menu", ConsoleColor.Black, ConsoleColor.White);
+            consoleLines.AddConsoleLine("----------");
+            consoleLines.AddConsoleLine("(R) Rebuild Login Configuation");
+            consoleLines.AddConsoleLine("(V) View config");
+            consoleLines.AddConsoleLine("");
+            consoleLines.AddConsoleLine("(M) Main Menu");
+            consoleLines.AddConsoleLine("Enter selection or (E) to exit.");
+        }
+
 
         public static void BuildNotInitializedQueue()
         {

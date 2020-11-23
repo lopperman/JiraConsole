@@ -51,7 +51,7 @@ namespace JConsole.Utilities
                 var items = changeLog.Items.Where(item => item.FieldName == "status");
                 foreach (JIssueChangeLogItem item in items)
                 {
-                    var itemStatus = _repo.JItemStatuses().SingleOrDefault(y=>y.StatusName == item.ToValue.ToLower());
+                    var itemStatus = _repo.JItemStatuses.SingleOrDefault(y=>y.StatusName == item.ToValue.ToLower());
                     if (itemStatus == null)
                     {
                         ConsoleUtil.WriteLine(string.Format("Error getting JItemStatus for {0}.  Cannot determine calendar/active work time for state '{1}'", issue.Key, item.ToValue));

@@ -39,13 +39,27 @@ namespace JiraCon
                 _epicLinkFieldKey = jField.Key;
             }
 
-            _itemStatuses = GetItemStatuses();
 
         }
 
-        public List<JItemStatus> JItemStatuses()
+        public void ConfigureItemStatuses()
         {
-            return _itemStatuses;
+            var itemStatusConfig = ConfigHelper.GetItemStatusConfig();
+
+            _itemStatuses = itemStatusConfig;
+
+        }
+
+        public List<JItemStatus> JItemStatuses
+        {
+            get
+            {
+                if (_itemStatuses == null || _itemStatuses.Count() == 0)
+                {
+                    ConfigureItemStatuses();
+                }
+                return _itemStatuses;
+            }
         }
 
         public string EpicLinkFieldName
@@ -110,7 +124,7 @@ namespace JiraCon
             return GetIssueTypeStatusesAsync(projKey, issueType).GetAwaiter().GetResult().ToList();
         }
 
-        private List<JItemStatus> GetItemStatuses()
+        public List<JItemStatus> GetJItemStatusDefaults()
         {
             var ret = new List<JItemStatus>();
 
@@ -142,7 +156,7 @@ namespace JiraCon
                 }
             }
 
-            return ret;
+            return ret.OrderBy(x=>x.StatusName).ToList();
         }
 
         public List<JField> GetFields()
@@ -418,6 +432,11 @@ namespace JiraCon
         public bool CalendarWork { get; set; }
         public bool ActiveWork { get; set; }
 
+        public JItemStatus()
+        {
+
+        }
+
         public JItemStatus(string name, string id, string categoryKey, string categoryName)
         {
             StatusName = name.ToLower();
@@ -465,7 +484,6 @@ namespace JiraCon
                 CalendarWork = true;
                 ActiveWork = GetIsActiveWorkState(name);
             }
-
         }
 
         private bool GetIsActiveWorkState(string name)
@@ -490,9 +508,6 @@ namespace JiraCon
             activeStates.Add("grubhub verification");
             activeStates.Add("in uat");
             activeStates.Add("team qa");
-            activeStates.Add("");
-            activeStates.Add("");
-            activeStates.Add("");
 
             return activeStates.Contains(name);
 

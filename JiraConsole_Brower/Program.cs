@@ -37,9 +37,38 @@ namespace JiraCon
             Environment.Exit(0);
         }
 
+        private static bool ConfigMenu()
+        {
+            ConsoleUtil.BuildConfigMenu();
+            ConsoleUtil.Lines.WriteQueuedLines(true);
+
+            var resp = Console.ReadKey();
+            if (resp.Key == ConsoleKey.R)
+            {
+                ConfigHelper.KillConfig();
+                ConsoleUtil.Lines.ByeBye();
+                Environment.Exit(0);
+            }
+            else if (resp.Key == ConsoleKey.E)
+            {
+                ConsoleUtil.Lines.ByeBye();
+                Environment.Exit(0);
+            }
+            else if (resp.Key == ConsoleKey.V)
+            {
+                ConfigHelper.ViewAll();
+                return true;
+            }
+            else if (resp.Key == ConsoleKey.M)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private static bool MainMenu()
         {
-
             if (!_initialized)
             {
                 if (config == null && _args != null)
@@ -243,17 +272,20 @@ namespace JiraCon
                 return true;
 
             }
-            else if (resp.Key == ConsoleKey.K)
+            else if (resp.Key == ConsoleKey.C)
             {
-                ConfigHelper.KillConfig();
-                return false;
+                while (ConfigMenu())
+                {
+
+                }
+                return true;
             }
             return false;
         }
 
         private static void ShowItemStatusConfig()
         {
-            List<JItemStatus> ordered = JiraUtil.JiraRepo.JItemStatuses().OrderBy(x => x.StatusName).ToList();
+            List<JItemStatus> ordered = JiraUtil.JiraRepo.JItemStatuses.OrderBy(x => x.StatusName).ToList();
             foreach (JItemStatus item in ordered)
             {
                 ConsoleUtil.WriteLine(item.ToString());
