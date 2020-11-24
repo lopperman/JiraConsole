@@ -42,7 +42,7 @@ namespace JiraCon
             ConsoleUtil.BuildConfigMenu();
             ConsoleUtil.Lines.WriteQueuedLines(true);
 
-            var resp = Console.ReadKey();
+            var resp = Console.ReadKey(true);
             if (resp.Key == ConsoleKey.R)
             {
                 ConfigHelper.KillConfig();
@@ -105,7 +105,7 @@ namespace JiraCon
                             ConsoleUtil.WriteLine("Invalid arguments!", ConsoleColor.Yellow, ConsoleColor.DarkBlue, false);
                             ConsoleUtil.WriteLine("Enter path to config file");
                             ConsoleUtil.WriteLine("Do you want to try again? (Y/N):");
-                            ConsoleKeyInfo keyInfo = Console.ReadKey();
+                            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
                             if (keyInfo.Key == ConsoleKey.Y)
                             {
                                 return true;
@@ -134,7 +134,7 @@ namespace JiraCon
                         ConsoleUtil.WriteLine("Invalid arguments!", ConsoleColor.Yellow, ConsoleColor.DarkBlue, false);
                         ConsoleUtil.WriteLine("Enter path to config file");
                         ConsoleUtil.WriteLine("Do you want to try again? (Y/N):");
-                        ConsoleKeyInfo keyInfo = Console.ReadKey();
+                        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
                         if (keyInfo.Key == ConsoleKey.Y)
                         {
                             return true;
@@ -158,7 +158,7 @@ namespace JiraCon
             ConsoleUtil.BuildInitializedMenu();
             ConsoleUtil.Lines.WriteQueuedLines(true);
 
-            var resp = Console.ReadKey();
+            var resp = Console.ReadKey(true);
             if (resp.Key == ConsoleKey.M)
             {
                 ConsoleUtil.WriteLine("");
@@ -177,7 +177,7 @@ namespace JiraCon
                 if (arr.Length >= 1)
                 {
                     ConsoleUtil.WriteLine("Would you like to include changes to card description and comments? (enter Y to include)");
-                    resp = Console.ReadKey();
+                    resp = Console.ReadKey(true);
                     if (resp.Key == ConsoleKey.Y)
                     {
                         AnalyzeIssues(keys,true);
@@ -191,7 +191,7 @@ namespace JiraCon
 
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine("Press any key to continue.");
-                Console.ReadKey();
+                Console.ReadKey(true);
                 return true;
             }
             else if (resp.Key == ConsoleKey.X)
@@ -203,13 +203,13 @@ namespace JiraCon
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n***** {0}", jql));
                 ConsoleUtil.WriteLine("");
-                var keys = Console.ReadKey();
+                var keys = Console.ReadKey(true);
                 if (keys.Key == ConsoleKey.Y)
                 {
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Enter (Y)es to include card descriptions and comments in the Change History file, otherwise press any key");
                     ConsoleUtil.WriteLine("");
-                    var k = Console.ReadKey();
+                    var k = Console.ReadKey(true);
                     Console.WriteLine();
                     bool includeCommentsAndDesc = false;
                     if (k.Key == ConsoleKey.Y)
@@ -220,89 +220,46 @@ namespace JiraCon
                     CreateExtractFiles(jql,includeCommentsAndDesc);
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
-                    Console.ReadKey();
+                    Console.ReadKey(true);
                 }
                 return true;
 
             }
             else if (resp.Key == ConsoleKey.W)
             {
-                ConsoleUtil.WriteLine("");
-                ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
-                var jql = Console.ReadLine();
-                ConsoleUtil.WriteLine("");
-                ConsoleUtil.WriteLine(string.Format("Enter (Y) to use this JQL:  {0}", jql));
-                ConsoleUtil.WriteLine("");
-                var keys = Console.ReadKey();
+                string jql = GetJQL();
 
                 int startHour = 7;
                 int endHour = 18;
 
-                if (keys.Key == ConsoleKey.Y)
+                if (jql != null)
                 {
-                    while(true)
-                    {
-                        ConsoleUtil.WriteLine("");
-                        ConsoleUtil.WriteLine("Enter (Y) to change the defaults for business hours? (7AM-6PM)");
-                        keys = Console.ReadKey();
-                        ConsoleUtil.WriteLine("");
-
-                        try
-                        {
-                            if (keys.Key == ConsoleKey.Y)
-                            {
-                                ConsoleUtil.WriteLine("Enter Hour for Business Start (0-23)");
-                                string read = Console.ReadLine();
-                                int start = Convert.ToInt32(read);
-
-                                ConsoleUtil.WriteLine("Enter Hour for Business End (0-23)");
-                                read = Console.ReadLine();
-                                int end = Convert.ToInt32(read);
-
-                                if (end > start)
-                                {
-                                    ConsoleUtil.WriteLine(string.Format("Enter (Y) to use {0} to {1} as business hours?",start,end));
-                                    keys = Console.ReadKey();
-                                    if (keys.Key == ConsoleKey.Y)
-                                    {
-                                        startHour = start;
-                                        endHour = end;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                break;
-                            }
-
-                        }
-                        catch
-                        {
-                            startHour = 7;
-                            endHour = 18;
-                        }
-
-                    }
-                    ConsoleUtil.WriteLine("");
+                    var dic = GetBusinessHours();
+                    startHour = dic["start"];
+                    endHour = dic["end"];
 
                     CreateWorkMetricsFile(jql,startHour,endHour);
 
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
-                    Console.ReadKey();
+                    Console.ReadKey(true);
                 }
                 return true;
 
             }
-
+            else if (resp.Key == ConsoleKey.A)
+            {
+                var epicAnalysis = new EpicAnalysis();
+                epicAnalysis.Analyze();
+                return true;
+            }
             else if (resp.Key == ConsoleKey.I)
             {
                 ShowItemStatusConfig();
 
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine("Press any key to continue.");
-                Console.ReadKey();
+                Console.ReadKey(true);
                 return true;
             }
             else if (resp.Key == ConsoleKey.J)
@@ -313,13 +270,13 @@ namespace JiraCon
                 var jql = Console.ReadLine();
                 ConsoleUtil.WriteLine("");
                 ConsoleUtil.WriteLine(string.Format("Enter (Y) to use the following JQL?\r\n***** {0}", jql));
-                var keys = Console.ReadKey();
+                var keys = Console.ReadKey(true);
                 if (keys.Key == ConsoleKey.Y)
                 {
                     ShowJSON(jql);
                     ConsoleUtil.WriteLine("");
                     ConsoleUtil.WriteLine("Press any key to continue.");
-                    Console.ReadKey();
+                    Console.ReadKey(true);
                 }
                 return true;
 
@@ -335,6 +292,80 @@ namespace JiraCon
             return false;
         }
 
+        public static Dictionary<string,int> GetBusinessHours()
+        {
+
+            Dictionary<string, int> ret = new Dictionary<string, int>();
+            ret.Add("start", 7);
+            ret.Add("end", 18);
+
+            while (true)
+            {
+                ConsoleUtil.WriteLine("");
+                ConsoleUtil.WriteLine("Enter (Y) to change the defaults for business hours? (7AM-6PM)");
+                var keys = Console.ReadKey(true);
+
+                try
+                {
+                    if (keys.Key == ConsoleKey.Y)
+                    {
+                        ConsoleUtil.WriteLine("Enter Hour for Business Start (0-23)");
+                        string read = Console.ReadLine();
+                        int start = Convert.ToInt32(read);
+
+                        ConsoleUtil.WriteLine("Enter Hour for Business End (0-23)");
+                        read = Console.ReadLine();
+                        int end = Convert.ToInt32(read);
+
+                        if (end > start && start >=0 && end <=23)
+                        {
+                            ConsoleUtil.WriteLine(string.Format("Enter (Y) to use {0} to {1} as business hours?", start, end));
+                            keys = Console.ReadKey(true);
+                            if (keys.Key == ConsoleKey.Y)
+                            {
+                                ret["start"] = start;
+                                ret["end"] = end;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+
+                }
+                catch
+                {
+                }
+
+            }
+
+            return ret;
+
+        }
+
+        private static string GetJQL()
+        {
+            ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine("Enter or paste JQL then press enter to continue.");
+            var jql = Console.ReadLine();
+            ConsoleUtil.WriteLine("");
+            ConsoleUtil.WriteLine(string.Format("Enter (Y) to use this JQL:  {0}", jql));
+            ConsoleUtil.WriteLine("");
+            var keys = Console.ReadKey(true);
+            if (keys.Key == ConsoleKey.Y)
+            {
+                return jql;
+            }
+            else
+            {
+                return null;
+            }
+
+
+        }
+
         private static void ShowItemStatusConfig()
         {
             List<JItemStatus> ordered = JiraUtil.JiraRepo.JItemStatuses.OrderBy(x => x.StatusName).ToList();
@@ -346,12 +377,21 @@ namespace JiraCon
 
         private static void CreateWorkMetricsFile(string jql, int startHour, int endHour)
         {
+            CreateWorkMetricsFile(jql, startHour, endHour, null);
+        }
+
+        public static void CreateWorkMetricsFile(string jql, int startHour, int endHour, string epicKey)
+        {
             try
             {
                 DateTime now = DateTime.Now;
                 string fileNameSuffix = string.Format("_{0:0000}{1}{2:00}_{3}.txt", now.Year, now.ToString("MMM"), now.Day, now.ToString("hhmmss"));
 
                 string workMetricsFile = String.Format("JiraCon_WorkMetrics_{0}", fileNameSuffix);
+                if (epicKey != null && epicKey.Length > 0)
+                {
+                    workMetricsFile = String.Format("JiraCon_WorkMetrics_Epic_{0}_{1}", epicKey, fileNameSuffix);
+                }
 
                 ConsoleUtil.WriteLine(string.Format("getting issues from JQL:{0}", Environment.NewLine));
                 ConsoleUtil.WriteLine(string.Format("{0}", jql));

@@ -38,7 +38,7 @@ namespace JiraCon
         {
             WriteLine("...");
             WriteLine("PRESS ANY KEY TO CONTINUE");
-            var key = Console.ReadKey();
+            var key = Console.ReadKey(true);
         }
 
         public static void ResetConsoleColors()
@@ -65,13 +65,14 @@ namespace JiraCon
 
         public static void BuildInitializedMenu()
         {
-            consoleLines.AddConsoleLine("----------");
-            consoleLines.AddConsoleLine("Main Menu", ConsoleColor.Black, ConsoleColor.White);
-            consoleLines.AddConsoleLine("----------");
+            consoleLines.AddConsoleLine(" ------------- ", ConsoleColor.Black, ConsoleColor.White);
+            consoleLines.AddConsoleLine("|  Main Menu  |");
+            consoleLines.AddConsoleLine(" ------------- ");
             consoleLines.AddConsoleLine("(M) Show Change History for 1 or (M)ore Cards");
             consoleLines.AddConsoleLine("(J) Show (J)SON for 1 or more Cards");
             consoleLines.AddConsoleLine("(X) Create E(X)tract files");
-            consoleLines.AddConsoleLine("(W) Create (W)ork Metrics Analysis");
+            consoleLines.AddConsoleLine("(W) Create (W)ork Metrics Analysis from JQL Query");
+            consoleLines.AddConsoleLine("(A) Epic (A)nalysis - Find and Analyze - Yep, this exists");
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("(I) View (I)tem Status values for work metrics");
             consoleLines.AddConsoleLine("(C) Config Menu");
@@ -80,9 +81,9 @@ namespace JiraCon
 
         public static void BuildConfigMenu()
         {
-            consoleLines.AddConsoleLine("----------");
-            consoleLines.AddConsoleLine("Config Menu", ConsoleColor.Black, ConsoleColor.White);
-            consoleLines.AddConsoleLine("----------");
+            consoleLines.AddConsoleLine(" --------------- ", ConsoleColor.Black, ConsoleColor.White);
+            consoleLines.AddConsoleLine("|  Config Menu  |");
+            consoleLines.AddConsoleLine(" --------------- ");
             consoleLines.AddConsoleLine("(R) Rebuild Login Configuation");
             consoleLines.AddConsoleLine("(V) View JiraConsole (this app) config");
             consoleLines.AddConsoleLine(string.Format("(J) View Jira Info for {0}",JiraUtil.JiraRepo.ServerInfo.BaseUrl));

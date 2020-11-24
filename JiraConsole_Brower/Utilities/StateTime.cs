@@ -64,7 +64,7 @@ namespace JConsole.Utilities
                         var err = string.Format("Error getting JItemStatus for Issue {0} ({1}).  Cannot determine calendar/active work time for state: '{2}'.  (** If this item SHOULD be included in calendarWork or activeWork calculations then a value will need to be added to the JiraConIssueStatus.txt for status: {2})", issue.Key, issue.IssueType, item.ToValue);
                         ConsoleUtil.WriteLine(err,ConsoleColor.DarkRed,ConsoleColor.Gray,false);
                         ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
-                        var ok = Console.ReadKey();
+                        var ok = Console.ReadKey(true);
                     }
                     if (itemStatus == null)
                     {

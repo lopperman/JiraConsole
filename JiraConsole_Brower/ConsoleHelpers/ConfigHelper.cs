@@ -26,7 +26,7 @@ namespace JiraCon
                 ConsoleUtil.WriteLine("Missing config file: " + path, ConsoleColor.Red, ConsoleColor.Gray, false);
                 ConsoleUtil.WriteLine("File will be generated with defaults but you will need to verify 'CalendarWork' and 'ActiveWork' in file: " + path,ConsoleColor.Red, ConsoleColor.Gray, false);
                 ConsoleUtil.WriteLine("Press any key to continue");
-                var ok = Console.ReadKey();
+                var ok = Console.ReadKey(true);
 
                 var jItemStatuses = JiraUtil.JiraRepo.GetJItemStatusDefaults();
                 ret = jItemStatuses;
@@ -85,7 +85,7 @@ namespace JiraCon
             ConsoleUtil.WriteLine("********** END LOGIN CONFIG ******", ConsoleColor.Yellow, ConsoleColor.Black, false);
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE");
-            var ok = Console.ReadKey();
+            var ok = Console.ReadKey(true);
 
 
             ConsoleUtil.WriteLine("********** ISSUE STATUS TIME METRICS CONFIG *********", ConsoleColor.Yellow, ConsoleColor.Black, false);
@@ -112,7 +112,7 @@ namespace JiraCon
 
 
             ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE");
-            ok = Console.ReadKey();
+            ok = Console.ReadKey(true);
         }
 
         internal static JiraConfiguration BuildConfig(string[] args)
@@ -179,7 +179,7 @@ namespace JiraCon
             }
 
             ConsoleUtil.WriteLine("Config file has been deleted. Run program again to create new config file. Press any key to exit.", ConsoleColor.White, ConsoleColor.DarkMagenta, true);
-            Console.ReadKey();
+            Console.ReadKey(true);
         }
 
         public static string[] GetConfig()
@@ -272,7 +272,7 @@ namespace JiraCon
             }
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine(string.Format("Enter 'Y' to Use '{0}', otherwise enter 'E' to exit or another key to enter new value", ret));
-            var key = Console.ReadKey();
+            var key = Console.ReadKey(true);
 
             if (key.Key == ConsoleKey.E)
             {

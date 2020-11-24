@@ -109,6 +109,7 @@
     <Compile Include="Utilities\StateTime.cs" />
     <Compile Include="ConsoleHelpers\ConsoleTable.cs" />
     <Compile Include="JiraLib\JEnvironmentConfig.cs" />
+    <Compile Include="JiraLib\EpicAnalysis.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -39,7 +39,6 @@ namespace JiraCon
                 _epicLinkFieldKey = jField.Key;
             }
 
-
         }
 
         public void ConfigureItemStatuses()
@@ -185,6 +184,32 @@ namespace JiraCon
 
             return ret;
         }
+
+        public int GetJQLResultsCount( string jql)
+        {
+            int ret = -1;
+
+            string data = GetJQLResultsCountAsync(jql).GetAwaiter().GetResult();
+            Dictionary<string, object> values = JsonConvert.DeserializeObject<Dictionary<string,object>>(data);
+
+            if (values.ContainsKey("total"))
+            {
+                ret = Convert.ToInt32(values["total"].ToString());
+            }
+
+            return ret;
+        }
+
+        private async Task<string> GetJQLResultsCountAsync(string jql, CancellationToken token = default(CancellationToken))
+        {
+            var resourceUrl = String.Format("rest/api/3/search?jql={0}",jql);
+            var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resourceUrl, null, token)
+                .ConfigureAwait(false);
+
+            return response.ToString();
+        }
+
+
 
         private async Task<string>GetFieldsAsync(CancellationToken token = default(CancellationToken))
         {
