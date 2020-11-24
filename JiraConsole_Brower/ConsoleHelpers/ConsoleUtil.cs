@@ -34,6 +34,13 @@ namespace JiraCon
             }
         }
 
+        public static void PressAnyKeyToContinue()
+        {
+            WriteLine("...");
+            WriteLine("PRESS ANY KEY TO CONTINUE");
+            var key = Console.ReadKey();
+        }
+
         public static void ResetConsoleColors()
         {
             Console.BackgroundColor = defaultBackground;
@@ -77,7 +84,8 @@ namespace JiraCon
             consoleLines.AddConsoleLine("Config Menu", ConsoleColor.Black, ConsoleColor.White);
             consoleLines.AddConsoleLine("----------");
             consoleLines.AddConsoleLine("(R) Rebuild Login Configuation");
-            consoleLines.AddConsoleLine("(V) View config");
+            consoleLines.AddConsoleLine("(V) View JiraConsole (this app) config");
+            consoleLines.AddConsoleLine(string.Format("(J) View Jira Info for {0}",JiraUtil.JiraRepo.ServerInfo.BaseUrl));
             consoleLines.AddConsoleLine("");
             consoleLines.AddConsoleLine("(M) Main Menu");
             consoleLines.AddConsoleLine("Enter selection or (E) to exit.");

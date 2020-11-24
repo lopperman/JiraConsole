@@ -59,17 +59,12 @@ namespace JConsole.Utilities
                 foreach (JIssueChangeLogItem item in items)
                 {
                     var itemStatus = _repo.JItemStatuses.SingleOrDefault(y=>y.StatusName.ToLower() == item.ToValue.ToLower());
-                    if (itemStatus == null)
+                    if (itemStatus == null && issue.IssueType.ToLower() != "epic")
                     {
-                        var err = string.Format("Error getting JItemStatus for {0} ({1}).  Cannot determine calendar/active work time for state '{2}'", issue.Key, issue.IssueType, item.ToValue);
+                        var err = string.Format("Error getting JItemStatus for Issue {0} ({1}).  Cannot determine calendar/active work time for state: '{2}'.  (** If this item SHOULD be included in calendarWork or activeWork calculations then a value will need to be added to the JiraConIssueStatus.txt for status: {2})", issue.Key, issue.IssueType, item.ToValue);
                         ConsoleUtil.WriteLine(err,ConsoleColor.DarkRed,ConsoleColor.Gray,false);
-                        ConsoleUtil.WriteLine("If issue type is an Epic then you should be ok.", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
-                        if (issue.IssueType.ToLower() != "epic")
-                        {
-                            ConsoleUtil.WriteLine("If issue type is an Epic then you should be ok. PRESS ANY KEY TO CONTINUE", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
-                            var ok = Console.ReadKey();
-                        }
-
+                        ConsoleUtil.WriteLine("PRESS ANY KEY TO CONTINUE", ConsoleColor.DarkRed, ConsoleColor.Gray, false);
+                        var ok = Console.ReadKey();
                     }
                     if (itemStatus == null)
                     {

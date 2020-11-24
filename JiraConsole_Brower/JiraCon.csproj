@@ -108,6 +108,7 @@
     <Compile Include="JiraLib\JiraUtil.cs" />
     <Compile Include="Utilities\StateTime.cs" />
     <Compile Include="ConsoleHelpers\ConsoleTable.cs" />
+    <Compile Include="JiraLib\JEnvironmentConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

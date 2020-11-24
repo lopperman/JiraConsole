@@ -59,6 +59,11 @@ namespace JiraCon
                 ConfigHelper.ViewAll();
                 return true;
             }
+            else if (resp.Key == ConsoleKey.J)
+            {
+                JEnvironmentConfig.JiraEnvironmentInfo();
+                return true;
+            }
             else if (resp.Key == ConsoleKey.M)
             {
                 return false;

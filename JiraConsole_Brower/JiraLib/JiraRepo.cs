@@ -552,8 +552,11 @@ namespace JiraCon
             Name = name;
         }
 
+        public string ID { get; set; }
         public string Key { get; set; }
         public string Name { get; set; }
+        public bool Custom { get; set; }
+        
     }
 
     public interface IJiraRepo
