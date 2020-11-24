@@ -6,6 +6,23 @@ namespace JiraCon
     public static class JHelper
     {
 
+        public static string RemoveCommas(string text)
+        {
+            return RemoveCommas(text, " ");
+        }
+
+        public static string RemoveCommas(string text, string replaceWith)
+        {
+            string ret = null;
+
+            if (text != null && !string.IsNullOrWhiteSpace(text))
+            {
+                ret = text.Replace(",", replaceWith);
+            }
+
+            return ret;
+        }
+
         public static T GetValue<T>(String value)
         {
             try
