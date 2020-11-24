@@ -237,6 +237,7 @@ namespace JiraCon
                 {
                     while(true)
                     {
+                        ConsoleUtil.WriteLine("");
                         ConsoleUtil.WriteLine("Enter (Y) to change the defaults for business hours? (7AM-6PM)");
                         keys = Console.ReadKey();
                         ConsoleUtil.WriteLine("");
@@ -387,12 +388,13 @@ namespace JiraCon
                         ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,totalBusinessDays,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
                         foreach (var wm in workMetrics)
                         {
-                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}",
+                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}",
                                 j.Key, j.IssueType, JHelper.RemoveCommas(j.Summary),
-                                j.EpicLinkKey,j.ParentIssueKey, JHelper.RemoveCommas(j.StatusName), JHelper.RemoveCommas(j.LabelsToString),
-                                wm.Start, wm.End, wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork,
-                                wm.TotalBusinessDays,wm.Total8HourAdjBusinessHours,
-                                wm.TransitionAfterHours,wm.Exclude,wm.ExcludeReasons);
+                                j.EpicLinkKey,j.ParentIssueKey, JHelper.RemoveCommas(j.StatusName),
+                                JHelper.RemoveCommas(j.LabelsToString),wm.Start, wm.End,
+                                wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork,
+                                wm.TotalBusinessDays,wm.Total8HourAdjBusinessHours,wm.TransitionAfterHours,
+                                wm.Exclude,wm.ExcludeReasons);
                             writer.WriteLine(text);
                             ConsoleUtil.WriteLine(text) ;
                         }
