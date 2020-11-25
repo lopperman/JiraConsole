@@ -78,10 +78,17 @@ namespace JiraCon
             preQAStatuses.Add("code review");
             preQAStatuses.Add("ready for qa");
 
-
-
-
             if (_issue == null) return;
+
+            var subTasks = JiraUtil.JiraRepo.GetSubTasksAsList(_issue);
+            if (subTasks != null && subTasks.Count > 0)
+            {
+                foreach (var st in subTasks)
+                {
+                    AddSubTask(st);
+                }
+            }
+
 
             Key = _issue.Key.Value;
             Summary = _issue.Summary.Replace(",", " ");
@@ -116,6 +123,8 @@ namespace JiraCon
                     _labels.Add(child);
                 }
             }
+
+            
 
         }
 

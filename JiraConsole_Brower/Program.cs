@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using Atlassian.Jira;
 using JConsole.Utilities;
 using Newtonsoft.Json;
 
@@ -240,9 +237,7 @@ namespace JiraCon
 
                     CreateWorkMetricsFile(jql,startHour,endHour);
 
-                    ConsoleUtil.WriteLine("");
-                    ConsoleUtil.WriteLine("Press any key to continue.");
-                    Console.ReadKey(true);
+                    ConsoleUtil.PressAnyKeyToContinue();
                 }
                 return true;
 
@@ -707,6 +702,7 @@ namespace JiraCon
             ConsoleUtil.SetDefaultConsoleColors();
 
             var issue = JiraUtil.JiraRepo.GetIssue(key);
+            //issue.
 
             if (issue == null)
             {

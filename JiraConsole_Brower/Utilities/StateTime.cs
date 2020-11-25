@@ -141,15 +141,6 @@ namespace JConsole.Utilities
             }
         }
 
-        //public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end)
-        //{
-        //    ItemStatus = itemStatus;
-        //    Start = start;
-        //    End = end;
-        //    StartHour = 7;
-        //    EndHour = 18;
-        //}
-
         public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end, int startHour, int endHour, JIssue issue, List<JIssue> issues)
         {
             ItemStatus = itemStatus;

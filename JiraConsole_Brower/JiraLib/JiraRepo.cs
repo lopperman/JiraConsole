@@ -255,10 +255,10 @@ namespace JiraCon
 
         public List<Issue> GetSubTasksAsList(Issue issue)
         {
-            return GetSubTasks(issue).GetAwaiter().GetResult().ToList();
+            return GetSubTasksAsync(issue).GetAwaiter().GetResult().ToList();
         }
 
-        public async Task<List<Issue>> GetSubTasks(Issue issue, CancellationToken token = default(CancellationToken))
+        public async Task<List<Issue>> GetSubTasksAsync(Issue issue, CancellationToken token = default(CancellationToken))
         {
             List<Issue> result = new List<Issue>();
 
