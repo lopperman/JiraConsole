@@ -1,1 +1,1 @@
-﻿
+﻿Config option to exclude Archived items

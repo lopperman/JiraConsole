@@ -417,6 +417,49 @@ namespace JiraCon
 
                 var metrics = new WorkMetrics(JiraUtil.JiraRepo,startHour,endHour);
 
+                SortedDictionary<string, string> forceIgnoreReasons = new SortedDictionary<string, string>();
+                //build workMetrics ONLY FOR PARENTS AND SUB-TASKS, then go back and update exclusions for parent/sub-tasks
+                var tempMetrics = new WorkMetrics(JiraUtil.JiraRepo, startHour, endHour);
+                foreach (JIssue j in jissues)
+                {
+                    if (j.SubTasks.Count > 0)
+                    {
+                        var workMetrics = tempMetrics.AddIssue(j, jissues);
+                        double parentActiveWorkTotal = workMetrics.Sum(item => item.Total8HourAdjBusinessHours);
+
+                        List<WorkMetric> subTaskWorkMetrics = new List<WorkMetric>();
+                        foreach (var subtask in j.SubTasks)
+                        {
+                            if (jissues.Any(x=>x.Key == subtask.Key))
+                            {
+                                subTaskWorkMetrics.AddRange(tempMetrics.AddIssue(jissues.Single(x=>x.Key == subtask.Key), jissues));
+                            }
+                        }
+                        var subTasksActiveWorkTotal = subTaskWorkMetrics.Sum(item => item.Total8HourAdjBusinessHours);
+                        if (parentActiveWorkTotal > subTasksActiveWorkTotal)
+                        {
+                            //use parent, ignore subtasks
+                            foreach (var subtask in j.SubTasks)
+                            { 
+                                forceIgnoreReasons.Add(subtask.Key, string.Format("Parent {0} active work time ({1}) is greater than combined sub-task active work time ({2})", j.Key, Math.Round(parentActiveWorkTotal, 2), Math.Round(subTasksActiveWorkTotal, 2)));
+                            }
+
+                        }
+                        else
+                        {
+                            //use subtasks, ignore parent
+                            var subTaskKeys = string.Join("*", j.SubTasks.Select(x => x.Key).ToList());
+
+                            forceIgnoreReasons.Add(j.Key, string.Format("subtasks {0} active work time ({1}) is greater than parent active work time ({2})", subTaskKeys, Math.Round(subTasksActiveWorkTotal, 2), Math.Round(parentActiveWorkTotal, 2)));
+                        }
+                    }
+
+                }
+
+                foreach (var kvp in forceIgnoreReasons)
+                {
+                    metrics.AddForceIgnore(kvp.Key, kvp.Value);
+                }
 
                 using (StreamWriter writer = new StreamWriter(Path.Combine(extractFolder,workMetricsFile)))
                 {

@@ -12,6 +12,7 @@ namespace JConsole.Utilities
         private JiraRepo _repo = null;
         private int _startHour = 0;
         private int _endHour = 0;
+        private SortedDictionary<string, string> _forceIgnoreKeyAndReason = new SortedDictionary<string, string>();
            
 
         public WorkMetrics(JiraRepo repo, int startHour, int endHour)
@@ -81,27 +82,37 @@ namespace JConsole.Utilities
 
             var keys = statusStartList.Keys.ToList().OrderBy(x => x).ToList();
 
+            string forceIgnoreReason = null;
+            if (_forceIgnoreKeyAndReason.ContainsKey(issue.Key))
+            {
+                forceIgnoreReason = _forceIgnoreKeyAndReason[issue.Key];
+            }
+
             for (int i = 0; i < keys.Count; i ++)
             {
                 //takes care of entries for first (if more than one item exists) and last
                 if (keys.Count == 1)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now,_startHour,_endHour, issue,jIssues));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now,_startHour,_endHour, issue,jIssues, forceIgnoreReason));
                 }
                 else if (i == keys.Count -1)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour, issue, jIssues));
-                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now, _startHour, _endHour, issue, jIssues));
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour, issue, jIssues, forceIgnoreReason));
+                    ret.Add(new WorkMetric(statusStartList[keys[i]], keys[i], DateTime.Now, _startHour, _endHour, issue, jIssues, forceIgnoreReason));
                 }
                 else if (i > 0)
                 {
-                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour, issue, jIssues));
+                    ret.Add(new WorkMetric(statusStartList[keys[i - 1]], keys[i - 1], keys[i], _startHour, _endHour, issue, jIssues, forceIgnoreReason));
                 }
             }
 
             return ret;
         }
 
+        internal void AddForceIgnore(string key, string reason)
+        {
+            _forceIgnoreKeyAndReason.Add(key, reason);
+        }
     }
 
     public class WorkMetric
@@ -111,6 +122,7 @@ namespace JConsole.Utilities
         public DateTime End { get; set; }
         public int StartHour { get; set; }
         public int EndHour { get; set; }
+        private string _forceIgnoreReason = null;
 
         public bool Exclude
         {
@@ -141,13 +153,17 @@ namespace JConsole.Utilities
             }
         }
 
-        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end, int startHour, int endHour, JIssue issue, List<JIssue> issues)
+        public WorkMetric(JItemStatus itemStatus, DateTime start, DateTime end, int startHour, int endHour, JIssue issue, List<JIssue> issues, string forceIgnoreReason)
         {
             ItemStatus = itemStatus;
             Start = start;
             End = end;
             StartHour = startHour;
             EndHour = endHour;
+            if (!string.IsNullOrWhiteSpace(forceIgnoreReason))
+            {
+                _forceIgnoreReason = forceIgnoreReason;
+            }
 
             CalculateExclusions(issue, issues);
         }
@@ -156,6 +172,12 @@ namespace JConsole.Utilities
 
         public void CalculateExclusions(JIssue issue, List<JIssue> issues)
         {
+            if (!string.IsNullOrWhiteSpace(_forceIgnoreReason))
+            {
+                AddExclusion(_forceIgnoreReason);
+                return;
+            }
+
             if (!IncludeForTimeCalc)
             {
                 AddExclusion("Non-working Status");
@@ -176,12 +198,6 @@ namespace JConsole.Utilities
             if (issue.IssueType.ToLower() == "epic")
             {
                 AddExclusion("Issue Type = Epic");
-            }
-
-            int childrenSubTasks = issues.Count(x => x.ParentIssueKey != null && x.ParentIssueKey.ToLower() == issue.Key.ToLower() && (x.IssueType.ToLower() == "sub-task" || x.IssueType.ToLower() == "subtask"));
-            if (childrenSubTasks > 0)
-            {
-                AddExclusion(string.Format("Has {0} sub-tasks", childrenSubTasks));
             }
 
 

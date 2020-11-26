@@ -114,6 +114,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="..\.editorconfig" />
+    <None Include="Config\ToDo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ConsoleHelpers\" />
