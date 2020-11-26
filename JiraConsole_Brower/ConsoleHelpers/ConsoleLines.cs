@@ -73,7 +73,6 @@ namespace JiraCon
                 {
                     Console.WriteLine(configInfo);
                 }
-                ConsoleUtil.SetDefaultConsoleColors();
             }
             for (int i = 0; i < _lines.Count; i++)
             {

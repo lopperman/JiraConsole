@@ -44,7 +44,7 @@ namespace JiraCon
             {
                 while (true)
                 {
-                    Console.WriteLine("Enter 1 or more project keys (listed above) separated by a space (e.g. POS BAM)");
+                    ConsoleUtil.WriteLine("Enter 1 or more project keys (listed above) separated by a space (e.g. POS BAM)");
                     var read = Console.ReadLine();
                     if (read != null && read.Length > 0)
                     {

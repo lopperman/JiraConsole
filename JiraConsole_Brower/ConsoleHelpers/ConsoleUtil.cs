@@ -7,25 +7,8 @@ namespace JiraCon
     public static class ConsoleUtil
     {
         static ConsoleLines consoleLines = new ConsoleLines();
-
-        private static ConsoleColor defaultForeground;
-        private static ConsoleColor defaultBackground;
-
-        public static ConsoleColor DefaultConsoleBackground
-        {
-            get
-            {
-                return defaultBackground;
-            }
-        }
-
-        public static ConsoleColor DefaultConsoleForeground
-        {
-            get
-            {
-                return defaultForeground;
-            }
-        }
+        static ConsoleColor defBackground = Console.BackgroundColor;
+        static ConsoleColor defForeground = Console.ForegroundColor;
 
         public static ConsoleLines Lines
         {
@@ -44,24 +27,15 @@ namespace JiraCon
 
         public static void ResetConsoleColors()
         {
-            Console.BackgroundColor = defaultBackground;
-            Console.ForegroundColor = defaultForeground;
+            Console.BackgroundColor = defBackground;
+            Console.ForegroundColor = defForeground;
         }
 
         public static void InitializeConsole(ConsoleColor defForeground, ConsoleColor defBackground)
         {
-            defaultForeground = defForeground;
-            defaultBackground = defBackground;
-            Console.ForegroundColor = defaultForeground;
-            Console.BackgroundColor = defaultBackground;
+            ResetConsoleColors();
             Console.Clear();
 
-        }
-
-        public static void SetDefaultConsoleColors()
-        {
-            Console.ForegroundColor = defaultForeground;
-            Console.BackgroundColor = defaultBackground;
         }
 
         public static void BuildInitializedMenu()
@@ -113,7 +87,7 @@ namespace JiraCon
 
         public static void WriteLine(string text, bool clearScreen)
         {
-            WriteLine(text, ConsoleUtil.DefaultConsoleForeground, ConsoleUtil.DefaultConsoleBackground, clearScreen);
+            WriteLine(text, Console.ForegroundColor, Console.BackgroundColor, clearScreen);
         }
 
         public static void WriteLine(string text, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool clearScreen)
@@ -125,7 +99,7 @@ namespace JiraCon
             Console.ForegroundColor = foregroundColor;
             Console.BackgroundColor = backgroundColor;
             Console.WriteLine(text);
-            SetDefaultConsoleColors();
+            ResetConsoleColors();
 
         }
 
@@ -136,9 +110,8 @@ namespace JiraCon
 
         public static void WriteAppend(string text, bool endOfLine)
         {
-            WriteAppend(text, defaultForeground, defaultBackground,endOfLine);
+            WriteAppend(text, defForeground, defBackground,endOfLine);
         }
-
 
         public static void WriteAppend(string text, ConsoleColor foregroundColor, ConsoleColor backgroundColor)
         {
@@ -154,7 +127,7 @@ namespace JiraCon
             {
                 Console.WriteLine();
             }
-            SetDefaultConsoleColors();
+            ResetConsoleColors();
         }
 
     }

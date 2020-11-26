@@ -46,10 +46,9 @@ namespace JiraCon
             }
             catch (Exception ex)
             {
-                Console.WriteLine("");
                 Console.Beep();
                 Console.Beep();
-                Console.WriteLine("Sorry, there seems to be a problem connecting to Jira with the arguments you provided. Error: {0}, {1}\r\n\r\n{2}", ex.Message, ex.Source, ex.StackTrace);
+                Console.Error.WriteLine("Sorry, there seems to be a problem connecting to Jira with the arguments you provided. Error: {0}, {1}\r\n\r\n{2}", ex.Message, ex.Source, ex.StackTrace);
                 return false;
             }
 

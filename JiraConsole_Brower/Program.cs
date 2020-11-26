@@ -12,10 +12,10 @@ namespace JiraCon
         private static bool _initialized = false;
         static JiraConfiguration config = null;
         private static string[] _args = null;
+        
 
         public static void Main(string[] args)
         {
-
             ConsoleUtil.InitializeConsole(ConsoleColor.White, ConsoleColor.Black);
 
             if (args == null || args.Length == 0)
@@ -207,7 +207,6 @@ namespace JiraCon
                     ConsoleUtil.WriteLine("Enter (Y)es to include card descriptions and comments in the Change History file, otherwise press any key");
                     ConsoleUtil.WriteLine("");
                     var k = Console.ReadKey(true);
-                    Console.WriteLine();
                     bool includeCommentsAndDesc = false;
                     if (k.Key == ConsoleKey.Y)
                     {
@@ -742,7 +741,6 @@ namespace JiraCon
 
             ConsoleUtil.WriteLine("");
             ConsoleUtil.WriteLine("***** Jira Card: " + key, ConsoleColor.DarkBlue, ConsoleColor.White, false);
-            ConsoleUtil.SetDefaultConsoleColors();
 
             var issue = JiraUtil.JiraRepo.GetIssue(key);
             //issue.
@@ -762,7 +760,6 @@ namespace JiraCon
 
             for (int i = 0; i < jIss.ChangeLogs.Count; i++)
             {
-                ConsoleUtil.SetDefaultConsoleColors();
 
                 JIssueChangeLog changeLog = jIss.ChangeLogs[i];
 
@@ -773,39 +770,29 @@ namespace JiraCon
                     {
                         if (includeDescAndComments)
                         {
-                            ConsoleUtil.WriteAppend(string.Format("{0} - Changed On {1}, {2} field changed ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName), ConsoleUtil.DefaultConsoleForeground, ConsoleUtil.DefaultConsoleBackground, true);
+                            ConsoleUtil.WriteAppend(string.Format("{0} - Changed On {1}, {2} field changed ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName), true);
                             ConsoleUtil.WriteAppend(string.Format("\t{0} changed from ", cli.FieldName), true);
-                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.FromValue), ConsoleColor.DarkGreen, ConsoleUtil.DefaultConsoleBackground, true);
+                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.FromValue), ConsoleColor.DarkGreen, Console.BackgroundColor, true);
                             ConsoleUtil.WriteAppend(string.Format("\t{0} changed to ", cli.FieldName), true);
-                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.ToValue), ConsoleColor.Green, ConsoleUtil.DefaultConsoleBackground, true);
+                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.ToValue), ConsoleColor.Green, Console.BackgroundColor, true);
                         }
                     }
                     else
                     {
                         if (cli.FieldName.ToLower().StartsWith("status"))
                         {
-                            Console.Write("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
-
-                            Console.BackgroundColor = ConsoleColor.Red;
-                            Console.ForegroundColor = ConsoleColor.White;
-
-                            Console.Write("{0}", cli.ToValue);
-                            Console.Write(Environment.NewLine);
+                            ConsoleUtil.WriteAppend(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue),false);
+                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.ToValue),ConsoleColor.White,ConsoleColor.Red,true);
                         }
                         else if (cli.FieldName.ToLower().StartsWith("label"))
                         {
-                            Console.Write("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue);
-
-                            Console.BackgroundColor = ConsoleColor.Blue;
-                            Console.ForegroundColor = ConsoleColor.White;
-
-                            Console.Write("{0}", cli.ToValue);
-                            Console.Write(Environment.NewLine);
+                            ConsoleUtil.WriteAppend(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to ", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue),false);
+                            ConsoleUtil.WriteAppend(string.Format("{0}", cli.ToValue), ConsoleColor.White, ConsoleColor.Blue);
                         }
 
                         else
                         {
-                            Console.WriteLine("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue);
+                            ConsoleUtil.WriteLine(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue));
                         }
                     }
                 }
