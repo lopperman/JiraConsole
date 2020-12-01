@@ -17,6 +17,7 @@ namespace JiraCon
 
         private List<JField> _fieldList = new List<JField>();
         private string _epicLinkFieldKey = string.Empty;
+        private string _featureTeamChoicesFieldKey = string.Empty;
         private List<JItemStatus> _itemStatuses = null;
 
         public JiraRepo(string server, string userName, string password)
@@ -37,6 +38,12 @@ namespace JiraCon
             if (jField != null)
             {
                 _epicLinkFieldKey = jField.Key;
+            }
+
+            jField = _fieldList.Where(x => x.Name == "Feature Team Choices").FirstOrDefault();
+            if (jField != null)
+            {
+                _featureTeamChoicesFieldKey = jField.Key;
             }
 
         }
@@ -68,6 +75,15 @@ namespace JiraCon
                 return _epicLinkFieldKey;
             }
         }
+
+        public string FeatureTeamChoicesFieldName
+        {
+            get
+            {
+                return _featureTeamChoicesFieldKey;
+            }
+        }
+
 
         public Jira GetJira()
         {
@@ -338,12 +354,24 @@ namespace JiraCon
                 }
             }
 
+            if (additionalFields == null)
+            {
+                if (!string.IsNullOrWhiteSpace(_featureTeamChoicesFieldKey))
+                {
+                    additionalFields = new string[] { _featureTeamChoicesFieldKey  };
+                }
+            }
+
             if (additionalFields != null)
             {
                 var fldList = additionalFields.ToList();
-                if (!fldList.Contains(_epicLinkFieldKey))
+                if (!fldList.Contains(_epicLinkFieldKey) && !string.IsNullOrWhiteSpace(_epicLinkFieldKey))
                 {
                     fldList.Add(_epicLinkFieldKey);
+                }
+                if (!fldList.Contains(_featureTeamChoicesFieldKey) && !string.IsNullOrWhiteSpace(_featureTeamChoicesFieldKey ))
+                {
+                    fldList.Add(_featureTeamChoicesFieldKey);
                 }
                 searchOptions.AdditionalFields = fldList;
             }

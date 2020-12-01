@@ -10,6 +10,11 @@ namespace JiraCon
         static ConsoleColor defBackground = Console.BackgroundColor;
         static ConsoleColor defForeground = Console.ForegroundColor;
 
+        public static void test()
+        {
+            
+        }
+
         public static ConsoleLines Lines
         {
             get

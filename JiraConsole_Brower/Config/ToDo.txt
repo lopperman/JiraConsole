@@ -1,1 +1,2 @@
-﻿Config option to exclude Archived items
+﻿* Config option to exclude Archived items
+* change all string formatters to use $"text {some.value}" style

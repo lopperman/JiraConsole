@@ -462,16 +462,16 @@ namespace JiraCon
 
                 using (StreamWriter writer = new StreamWriter(Path.Combine(extractFolder,workMetricsFile)))
                 {
-                        writer.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,totalBusinessDays,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
+                        writer.WriteLine("key,type,created,featureTeam,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,totalBusinessDays,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
                     foreach (JIssue j in jissues)
                     {
                         ConsoleUtil.WriteLine(string.Format("analyzing {0} - {1}", j.Key, j.IssueType));
                         var workMetrics = metrics.AddIssue(j, jissues);
-                        ConsoleUtil.WriteLine("key,type,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,totalBusinessDays,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
+                        ConsoleUtil.WriteLine("key,type,created,featureTeam,summary,epicKey,parentIssueKey,currentStatus,labels,start,end,status,activeWork,calendarWork,totalBusinessDays,totalBusinessHours_8HourDay,transitionAfterHours,exclude,reason");
                         foreach (var wm in workMetrics)
                         {
-                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}",
-                                j.Key, j.IssueType, JHelper.RemoveCommas(j.Summary),
+                            string text = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18}",
+                                j.Key, j.IssueType, j.CreateDate.Value.ToShortDateString(), j.FeatureTeamChoices, JHelper.RemoveCommas(j.Summary),
                                 j.EpicLinkKey,j.ParentIssueKey, JHelper.RemoveCommas(j.StatusName),
                                 JHelper.RemoveCommas(j.LabelsToString),wm.Start, wm.End,
                                 wm.ItemStatus.StatusName, wm.ItemStatus.ActiveWork, wm.ItemStatus.CalendarWork,
@@ -792,7 +792,8 @@ namespace JiraCon
 
                         else
                         {
-                            ConsoleUtil.WriteLine(string.Format("{0} - Changed On {1}, {2} field changed from '{3}' to '{4}'", issue.Key, changeLog.CreatedDate.ToString(), cli.FieldName, cli.FromValue, cli.ToValue));
+                            ConsoleUtil.WriteLine($"{issue.Key} - Changed On {changeLog.CreatedDate}, {cli.FieldName} field changed from '{cli.FromValue}' to '{cli.ToValue}'");
+
                         }
                     }
                 }

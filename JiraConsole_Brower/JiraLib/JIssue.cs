@@ -128,6 +128,29 @@ namespace JiraCon
 
         }
 
+        public string FeatureTeamChoices
+        {
+            get
+            {
+                string ret = string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(JiraUtil.JiraRepo.FeatureTeamChoicesFieldName))
+                {
+                    var ftcField = _customFields.Where(x => x.Id == JiraUtil.JiraRepo.FeatureTeamChoicesFieldName).SingleOrDefault();
+                    if (ftcField != null)
+                    {
+                        if (ftcField.Values.Length > 0)
+                        {
+                            return String.Join("; ", ftcField.Values);
+                            //return ftcField.Values[0];
+                        }
+                    }
+                }
+                return ret;
+            }
+        }
+
+
         public string EpicLinkKey
         {
             get
