@@ -1,3 +1,5 @@
+#The JiraConsole Repo is obsolete.  Please seee https://github.com/lopperman/jiraTimeInStatus for the repo that is a continuation of 'JiraConsole', using current libraries and set up for VSCode
+
 # JiraConsole
 Console app to work with Jira REST API via the Atlassian.SDK for .Net (v12.x.x)
 
